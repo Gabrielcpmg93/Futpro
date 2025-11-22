@@ -29,6 +29,11 @@ export interface Team {
   trophies: string[];
 }
 
+export interface SocialInteraction {
+  userComment: string;
+  playerReply: string | null; // null indicates loading/typing
+}
+
 export interface SocialPost {
   id: string;
   authorName: string;
@@ -36,6 +41,7 @@ export interface SocialPost {
   likes: number;
   comments: number;
   liked: boolean;
+  interactions: SocialInteraction[];
 }
 
 export interface MatchResult {

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { SocialPost } from '../types';
-import { generateSocialPosts } from '../services/geminiService';
-import { Heart, MessageCircle, Share2, Send } from 'lucide-react';
+import { generateSocialPosts, generatePlayerReply } from '../services/geminiService';
+import { Heart, MessageCircle, Share2, Send, User, Loader2 } from 'lucide-react';
 
 interface SocialViewProps {
     teamName: string;
@@ -17,12 +17,34 @@ const SocialView: React.FC<SocialViewProps> = ({ teamName }) => {
         setPosts(posts.map(p => p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p));
     };
 
-    const handleCommentSubmit = (id: string) => {
+    const handleCommentSubmit = async (post: SocialPost) => {
         if (!commentText.trim()) return;
-        setPosts(posts.map(p => p.id === id ? { ...p, comments: p.comments + 1 } : p));
-        setCommentingId(null);
-        setCommentText("");
-        alert("Comentário enviado!");
+        
+        const userComment = commentText;
+        setCommentText(""); // Clear input immediately
+        
+        // Add user comment and empty placeholder for reply
+        const newInteraction = { userComment: userComment, playerReply: null };
+        
+        const updatedPosts = posts.map(p => 
+            p.id === post.id 
+            ? { ...p, interactions: [...p.interactions, newInteraction], comments: p.comments + 1 } 
+            : p
+        );
+        setPosts(updatedPosts);
+
+        // Fetch AI Reply
+        const reply = await generatePlayerReply(post.authorName, post.content, userComment);
+
+        // Update with reply
+        setPosts(currentPosts => currentPosts.map(p => {
+            if (p.id === post.id) {
+                const updatedInteractions = [...p.interactions];
+                updatedInteractions[updatedInteractions.length - 1].playerReply = reply;
+                return { ...p, interactions: updatedInteractions };
+            }
+            return p;
+        }));
     };
 
     return (
@@ -42,6 +64,40 @@ const SocialView: React.FC<SocialViewProps> = ({ teamName }) => {
                         </div>
                         <p className="text-slate-700 text-sm mb-4 leading-relaxed">{post.content}</p>
                         
+                        {/* Interactions Area */}
+                        {post.interactions.length > 0 && (
+                            <div className="mb-4 space-y-3 bg-slate-50 p-3 rounded-xl">
+                                {post.interactions.map((interaction, idx) => (
+                                    <div key={idx} className="text-sm">
+                                        <div className="flex items-start gap-2 mb-1">
+                                            <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 shrink-0">
+                                                <User size={12} />
+                                            </div>
+                                            <div className="bg-white p-2 rounded-tr-xl rounded-br-xl rounded-bl-xl shadow-sm border border-slate-100">
+                                                <p className="text-slate-700">{interaction.userComment}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        {interaction.playerReply ? (
+                                            <div className="flex items-start justify-end gap-2 animate-in slide-in-from-left-2 fade-in">
+                                                <div className="bg-purple-50 p-2 rounded-tl-xl rounded-bl-xl rounded-br-xl border border-purple-100 text-right">
+                                                    <p className="text-purple-800 font-medium">{interaction.playerReply}</p>
+                                                </div>
+                                                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 shrink-0 text-[10px] font-bold">
+                                                    {post.authorName.charAt(0)}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-end gap-2 text-slate-400 text-xs italic">
+                                                <span>{post.authorName} está digitando...</span>
+                                                <Loader2 size={12} className="animate-spin" />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-6 border-t border-slate-50 pt-3">
                             <button onClick={() => toggleLike(post.id)} className={`flex items-center gap-1 text-xs font-bold transition-colors ${post.liked ? 'text-red-500' : 'text-slate-400'}`}>
                                 <Heart size={18} fill={post.liked ? "currentColor" : "none"} /> {post.likes}
@@ -65,9 +121,12 @@ const SocialView: React.FC<SocialViewProps> = ({ teamName }) => {
                                     onChange={(e) => setCommentText(e.target.value)}
                                     placeholder="Escreva um comentário..."
                                     className="flex-1 bg-slate-100 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-emerald-500"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleCommentSubmit(post);
+                                    }}
                                 />
                                 <button 
-                                    onClick={() => handleCommentSubmit(post.id)}
+                                    onClick={() => handleCommentSubmit(post)}
                                     className="bg-emerald-500 text-white p-2 rounded-lg hover:bg-emerald-600 transition-colors"
                                 >
                                     <Send size={16} />

@@ -165,7 +165,7 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
           rating: p.rating,
           age: p.age,
           salary: Math.floor(p.rating * 1500),
-          contractWeeks: 40, // Set to 40 as requested
+          contractWeeks: 40, 
           marketValue: p.marketValue || 5.0
        };
     });
@@ -190,7 +190,7 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
             rating: 65 + Math.floor(Math.random() * 15), // Lower rating for fillers
             age: 18 + Math.floor(Math.random() * 15),
             salary: 10000 + Math.floor(Math.random() * 10000),
-            contractWeeks: 40, // Set to 40 as requested
+            contractWeeks: 40,
             marketValue: 1.0 + Math.random() * 3
          });
     }
@@ -224,10 +224,36 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
 
 export const generateSocialPosts = (teamName: string): SocialPost[] => {
   return [
-    { id: '1', authorName: "Capitão Silva", content: `Grande treino hoje com o ${teamName}! Estamos prontos.`, likes: 120, comments: 45, liked: false },
-    { id: '2', authorName: "Torcida Organizada", content: "Queremos raça amanhã! Vamos pra cima!", likes: 890, comments: 120, liked: false },
-    { id: '3', authorName: "Jornal da Bola", content: `Rumores dizem que o ${teamName} busca reforços no mercado.`, likes: 50, comments: 10, liked: false },
+    { id: '1', authorName: "Capitão Silva", content: `Grande treino hoje com o ${teamName}! Estamos prontos.`, likes: 120, comments: 45, liked: false, interactions: [] },
+    { id: '2', authorName: "Torcida Organizada", content: "Queremos raça amanhã! Vamos pra cima!", likes: 890, comments: 120, liked: false, interactions: [] },
+    { id: '3', authorName: "Jornal da Bola", content: `Rumores dizem que o ${teamName} busca reforços no mercado.`, likes: 50, comments: 10, liked: false, interactions: [] },
   ];
+};
+
+export const generatePlayerReply = async (authorName: string, postContent: string, userComment: string): Promise<string> => {
+  const ai = getAiClient();
+  const defaultReply = "Valeu pelo apoio! ⚽";
+
+  if (!ai) return defaultReply;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: `
+        You are a football player named "${authorName}". 
+        You posted this on social media: "${postContent}".
+        A fan commented: "${userComment}".
+        
+        Write a short reply (max 20 words) in Portuguese to this fan. 
+        Be informal, authentic, and match the context. Use emojis if appropriate.
+      `,
+    });
+    
+    return response.text?.trim() || defaultReply;
+  } catch (e) {
+    console.error("Error generating reply:", e);
+    return defaultReply;
+  }
 };
 
 export const generateMarketPlayers = (): Player[] => {
@@ -298,7 +324,7 @@ const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
       rating: 70 + Math.floor(Math.random() * 20),
       age: 18 + Math.floor(Math.random() * 15),
       salary: 25000,
-      contractWeeks: 40, // Set to 40 as requested
+      contractWeeks: 40,
       marketValue: 5.0
     }))
   };
