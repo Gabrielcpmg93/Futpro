@@ -16,7 +16,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 // Using gemini-2.0-flash-exp as it is stable and fast
 const MODEL_NAME = "gemini-2.0-flash-exp";
 
-// Hardcoded mapping to ensure fictional names for the specific list provided
+// Mapping for Copa America
 export const COPA_TEAMS_MAPPING: Record<string, string> = {
   "Deportivo Táchira": "Táchira Aurinegro",
   "Carabobo": "Granada FC",
@@ -37,20 +37,31 @@ export const COPA_TEAMS_MAPPING: Record<string, string> = {
   "Colo-Colo": "Cacique Eterno",
   "Bolívar": "Celeste de La Paz",
   "San Antonio Bulo Bulo": "Santo Antônio FC",
+  "River Plate": "Rio de Prata"
+};
+
+// Mapping for Brasileirão Série A (Friendlies/Career)
+export const SERIE_A_MAPPING: Record<string, string> = {
   "Flamengo": "Urubu Guerreiro",
-  "Cruzeiro": "Raposa Celeste",
-  "Bahia": "Tricolor de Aço",
-  "São Paulo": "Soberano FC",
-  "Internacional": "Colorado do Sul",
-  "Fortaleza": "Leão do Pici",
   "Palmeiras": "Porco Alviverde",
+  "São Paulo": "Soberano FC",
+  "Corinthians": "Timão do Povo",
+  "Fluminense": "Guerreiros das Laranjeiras",
+  "Grêmio": "Imortal Tricolor",
+  "Internacional": "Colorado do Sul",
+  "Atlético Mineiro": "Galo Doido",
+  "Cruzeiro": "Raposa Celeste",
+  "Vasco da Gama": "Gigante da Colina",
   "Botafogo": "Estrela Solitária",
-  "River Plate": "Rio de Prata",
-  "Talleres": "Talleres de Córdoba",
-  "Central de Córdoba": "Ferroviário Central",
-  "Racing": "Academia de Avellaneda",
-  "Estudiantes": "Pincharratas",
-  "Vélez Sarsfield": "Fortim de Liniers"
+  "Bahia": "Tricolor de Aço",
+  "Fortaleza": "Leão do Pici",
+  "Athletico Paranaense": "Furacão da Arena",
+  "Red Bull Bragantino": "Massa Bruta",
+  "Cuiabá": "Dourado do Pantanal",
+  "Criciúma": "Tigre Carvoeiro",
+  "Juventude": "Papo da Serra",
+  "Vitória": "Leão da Barra",
+  "Atlético Goianiense": "Dragão do Centro"
 };
 
 const FIRST_NAMES = ["Lucas", "Matheus", "Gabriel", "Enzo", "Pedro", "João", "Rafael", "Gustavo", "Felipe", "Bruno", "Thiago", "Diego", "Rodrigo", "André", "Eduardo", "Caio", "Vinícius", "Leonardo", "Igor", "Marcelo"];
@@ -63,8 +74,8 @@ const getRandomName = () => {
 };
 
 export const generateFictionalTeam = async (realTeamName: string): Promise<Team> => {
-  // Check if we have a hardcoded mapping first
-  let fictionalName = COPA_TEAMS_MAPPING[realTeamName];
+  // Check mappings
+  let fictionalName = COPA_TEAMS_MAPPING[realTeamName] || SERIE_A_MAPPING[realTeamName];
   
   const ai = getAiClient();
   
@@ -137,7 +148,7 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
     return {
       id: generateId(),
       originalName: realTeamName,
-      name: data.fictionalName || `${realTeamName} Fictício`,
+      name: data.fictionalName || fictionalName || `${realTeamName} Fictício`,
       primaryColor: data.primaryColor || "#000000",
       secondaryColor: data.secondaryColor || "#ffffff",
       roster: roster,

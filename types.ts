@@ -52,6 +52,7 @@ export enum ScreenState {
   HOME = 'HOME',
   SQUAD = 'SQUAD',
   MATCH = 'MATCH',
+  FRIENDLY_SETUP = 'FRIENDLY_SETUP',
   SOCIAL = 'SOCIAL',
   MARKET = 'MARKET',
   COPA_AMERICAS = 'COPA_AMERICAS',

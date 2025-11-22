@@ -1,28 +1,30 @@
 
 import React, { useState } from 'react';
 import { Team, Position } from '../types';
-import { COPA_TEAMS_MAPPING } from '../services/geminiService';
-import { Star, User, ArrowRight, MapPin, Calendar, Trophy } from 'lucide-react';
+import { SERIE_A_MAPPING } from '../services/geminiService';
+import { Star, User, ArrowRight, MapPin, Calendar, Trophy, Activity } from 'lucide-react';
 import MatchView from './MatchView';
 
 interface CareerViewProps {
     onComplete: (team: Team) => void;
     onCancel: () => void;
+    onWinTrophy: () => void;
 }
 
-const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel }) => {
+const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrophy }) => {
     const [step, setStep] = useState(1);
     const [playerName, setPlayerName] = useState('');
     const [loading, setLoading] = useState(false);
     const [myTeam, setMyTeam] = useState<Team | null>(null);
     const [inCareerMatch, setInCareerMatch] = useState(false);
     const [careerOpponent, setCareerOpponent] = useState<string>('');
+    
+    // Season Stats
+    const [gamesPlayed, setGamesPlayed] = useState(0);
+    const TOTAL_GAMES = 80;
 
-    // Fictional Serie A opponents for Career Mode
-    const CAREER_OPPONENTS = [
-        "Urubu Guerreiro", "Porco Alviverde", "Soberano FC", "Tricolor de Aço", 
-        "Raposa Celeste", "Colorado do Sul", "Leão do Pici", "Estrela Solitária"
-    ];
+    // Fictional Serie A opponents using the mapping
+    const CAREER_OPPONENTS = Object.values(SERIE_A_MAPPING);
 
     const handleCreate = () => {
         if (!playerName) return;
@@ -37,12 +39,12 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel }) => {
         }, 3000);
     };
 
-    const selectOffer = (clubName: string) => {
+    const selectOffer = (clubFictionalName: string) => {
         // Create the user's team
         const newTeam: Team = {
             id: 'career-team',
-            name: clubName,
-            originalName: clubName,
+            name: clubFictionalName,
+            originalName: clubFictionalName,
             primaryColor: '#0000FF',
             secondaryColor: '#FFFFFF',
             strength: 75,
@@ -64,8 +66,9 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel }) => {
     };
 
     const startCareerMatch = () => {
+        if (gamesPlayed >= TOTAL_GAMES) return;
         const randomOpponent = CAREER_OPPONENTS[Math.floor(Math.random() * CAREER_OPPONENTS.length)];
-        // Ensure we don't play against ourselves if names match
+        // Ensure we don't play against ourselves
         const opponent = randomOpponent === myTeam?.name ? "Rival Local FC" : randomOpponent;
         setCareerOpponent(opponent);
         setInCareerMatch(true);
@@ -73,10 +76,19 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel }) => {
 
     const handleMatchFinish = (result: 'win' | 'loss' | 'draw') => {
         setInCareerMatch(false);
-        if (result === 'win') {
-            alert("Vitória importante para sua carreira! Valor de mercado subiu.");
+        const newGamesPlayed = gamesPlayed + 1;
+        setGamesPlayed(newGamesPlayed);
+
+        if (newGamesPlayed === TOTAL_GAMES) {
+            // Season Finished
+            onWinTrophy();
+            alert("Parabéns! Você completou a temporada de 80 jogos e conquistou o Troféu Estrelato!");
         } else {
-            alert("Resultado difícil. Treine mais.");
+            if (result === 'win') {
+                alert("Vitória! +3 Pontos na tabela.");
+            } else {
+                alert("Fim de jogo.");
+            }
         }
     };
 
@@ -172,44 +184,57 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel }) => {
                          
                          <div className="grid grid-cols-2 gap-4">
                              <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5">
-                                 <p className="text-xs text-slate-400 uppercase">Valor</p>
-                                 <p className="text-lg font-bold text-emerald-400">$1.5M</p>
+                                 <p className="text-xs text-slate-400 uppercase">Jogos</p>
+                                 <p className="text-lg font-bold text-emerald-400">{gamesPlayed} / {TOTAL_GAMES}</p>
                              </div>
                              <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5">
-                                 <p className="text-xs text-slate-400 uppercase">Média</p>
-                                 <p className="text-lg font-bold text-yellow-400">70</p>
+                                 <p className="text-xs text-slate-400 uppercase">Progresso</p>
+                                 <div className="w-full bg-slate-700 h-2 rounded-full mt-2">
+                                     <div 
+                                        className="bg-yellow-400 h-2 rounded-full transition-all duration-500" 
+                                        style={{ width: `${(gamesPlayed/TOTAL_GAMES)*100}%` }}
+                                     ></div>
+                                 </div>
                              </div>
                          </div>
                     </div>
 
                     {/* Menu Actions */}
                     <div className="flex-1 p-6 -mt-6 bg-slate-900 rounded-t-3xl">
-                        <h3 className="font-bold text-lg mb-4">Próximo Desafio</h3>
+                        <h3 className="font-bold text-lg mb-4">Temporada Atual</h3>
                         
-                        <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 mb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-sm text-slate-400">Brasileirão Série A</span>
-                                <span className="bg-slate-700 px-2 py-1 rounded text-xs font-mono">Rodada 1</span>
+                        {gamesPlayed < TOTAL_GAMES ? (
+                            <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 mb-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-sm text-slate-400">Brasileirão Série A</span>
+                                    <span className="bg-slate-700 px-2 py-1 rounded text-xs font-mono">Jogo {gamesPlayed + 1}</span>
+                                </div>
+                                <div className="flex items-center justify-between mb-6">
+                                    <span className="font-bold">{myTeam.name}</span>
+                                    <span className="text-slate-500 text-xs">vs</span>
+                                    <span className="font-bold text-right">Adversário da Liga</span>
+                                </div>
+                                <button 
+                                    onClick={startCareerMatch} 
+                                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    <PlayIcon /> Ir para o Jogo
+                                </button>
                             </div>
-                            <div className="flex items-center justify-between mb-6">
-                                <span className="font-bold">{myTeam.name}</span>
-                                <span className="text-slate-500 text-xs">vs</span>
-                                <span className="font-bold text-right">Adversário Aleatório</span>
+                        ) : (
+                            <div className="bg-yellow-500 text-slate-900 p-6 rounded-2xl mb-6 text-center animate-bounce">
+                                <Trophy className="mx-auto mb-2" size={40} />
+                                <h3 className="font-bold text-xl">Temporada Finalizada!</h3>
+                                <p className="text-sm font-medium">Você completou os 80 jogos.</p>
                             </div>
-                            <button 
-                                onClick={startCareerMatch} 
-                                className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
-                            >
-                                <PlayIcon /> Ir para o Jogo
-                            </button>
-                        </div>
+                        )}
 
                         <div className="space-y-3">
-                             <button className="w-full p-4 bg-slate-800 rounded-xl flex items-center gap-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                                 <Calendar size={20} /> Calendário
+                             <button className="w-full p-4 bg-slate-800 rounded-xl flex items-center gap-3 text-slate-300 cursor-not-allowed opacity-60">
+                                 <Calendar size={20} /> Calendário (Bloqueado)
                              </button>
                              <button onClick={exitCareer} className="w-full p-4 bg-slate-800 rounded-xl flex items-center gap-3 text-red-400 hover:bg-slate-700 transition-colors">
-                                 <ArrowRight size={20} /> Sair do Modo Carreira
+                                 <ArrowRight size={20} /> Voltar ao Menu Principal
                              </button>
                         </div>
                     </div>

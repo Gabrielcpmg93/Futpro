@@ -9,6 +9,7 @@ import MarketView from './components/MarketView';
 import SocialView from './components/SocialView';
 import CopaView from './components/CopaView';
 import CareerView from './components/CareerView';
+import FriendlyView from './components/FriendlyView';
 import { Team, ScreenState } from './types';
 
 const App: React.FC = () => {
@@ -25,7 +26,7 @@ const App: React.FC = () => {
   };
 
   const handleMatchFinish = (result: 'win' | 'loss' | 'draw') => {
-      // Simple match result logic for quick match
+      // Simple match result logic for quick match (if accessed directly, though Friendlies use their own now)
       if (result === 'win' && userTeam) {
           setUserTeam({ ...userTeam, budget: userTeam.budget + 100000 }); // Win bonus
       }
@@ -38,12 +39,31 @@ const App: React.FC = () => {
       }
   };
 
+  const handleCareerTrophy = () => {
+      if (userTeam) {
+          // Check if already has trophy to avoid duplicates if triggered multiple times
+          if (!userTeam.trophies.includes("Troféu Estrelato")) {
+            setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Troféu Estrelato"] });
+          }
+      }
+  };
+
   if (currentScreen === ScreenState.SELECT_TEAM) {
     return <TeamSelector onTeamSelected={handleTeamSelect} />;
   }
 
   if (currentScreen === ScreenState.CAREER_MODE) {
-      return <CareerView onComplete={handleTeamSelect} onCancel={() => setCurrentScreen(ScreenState.HOME)} />;
+      return (
+        <CareerView 
+            onComplete={handleTeamSelect} 
+            onCancel={() => setCurrentScreen(ScreenState.HOME)} 
+            onWinTrophy={handleCareerTrophy}
+        />
+      );
+  }
+
+  if (currentScreen === ScreenState.FRIENDLY_SETUP) {
+      return <FriendlyView onBack={() => setCurrentScreen(ScreenState.HOME)} />;
   }
 
   if (!userTeam) return null;

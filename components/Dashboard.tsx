@@ -95,14 +95,14 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
           <div>
             <p className="text-violet-200 text-xs font-medium mb-1 uppercase tracking-wide">Modo Carreira</p>
             <h2 className="text-white text-2xl font-bold">Rumo ao Estrelato</h2>
-            <p className="text-violet-300 text-xs mt-1">Comece sua jornada amadora</p>
+            <p className="text-violet-300 text-xs mt-1">Temporada de 80 Jogos</p>
           </div>
         </div>
       </div>
 
-      {/* Next Match Quick Action */}
+      {/* Friendly Match */}
       <div 
-        onClick={() => onNavigate(ScreenState.MATCH)}
+        onClick={() => onNavigate(ScreenState.FRIENDLY_SETUP)}
         className="w-full rounded-3xl p-6 relative overflow-hidden shadow-xl cursor-pointer group"
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}
       >
@@ -114,7 +114,8 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
              <span className="text-white text-xs bg-emerald-600 px-2 py-1 rounded">Amistoso</span>
           </div>
           <div>
-            <h2 className="text-white text-xl font-bold">Partida Rápida</h2>
+            <h2 className="text-white text-xl font-bold">Jogar Amistoso</h2>
+            <p className="text-slate-400 text-xs mt-1">Escolha times da Série A Fictícia</p>
           </div>
         </div>
       </div>
