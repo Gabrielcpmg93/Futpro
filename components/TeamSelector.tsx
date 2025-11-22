@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { generateFictionalTeam } from '../services/geminiService';
 import { Team } from '../types';
@@ -7,11 +8,11 @@ interface TeamSelectorProps {
   onTeamSelected: (team: Team) => void;
 }
 
-const BRAZILIAN_TEAMS = [
+const SERIE_A_TEAMS = [
   "Flamengo", "Palmeiras", "São Paulo", "Corinthians", 
   "Fluminense", "Grêmio", "Internacional", "Atlético Mineiro", 
   "Cruzeiro", "Vasco da Gama", "Botafogo", "Bahia", 
-  "Fortaleza", "Athletico Paranaense", "Santos"
+  "Fortaleza", "Athletico Paranaense"
 ];
 
 const TeamSelector: React.FC<TeamSelectorProps> = ({ onTeamSelected }) => {
@@ -31,7 +32,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({ onTeamSelected }) => {
             <Trophy className="text-white" size={32} />
          </div>
          <h1 className="text-3xl font-bold text-white mb-2">Escolha seu Time</h1>
-         <p className="text-slate-400 text-sm">Selecione um gigante do futebol brasileiro para começar sua jornada no mundo fictício.</p>
+         <p className="text-slate-400 text-sm">Selecione um gigante para iniciar sua gestão.</p>
       </div>
 
       {loading ? (
@@ -39,12 +40,12 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({ onTeamSelected }) => {
            <Loader2 className="text-emerald-400 animate-spin w-12 h-12" />
            <div className="text-center">
              <p className="text-white font-semibold text-lg">Criando identidade do clube...</p>
-             <p className="text-slate-400 text-sm mt-1">Contratando jogadores fictícios para o {loading}</p>
+             <p className="text-slate-400 text-sm mt-1">Contratando 24 jogadores fictícios...</p>
            </div>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 pb-10">
-          {BRAZILIAN_TEAMS.map((name) => (
+          {SERIE_A_TEAMS.map((name) => (
             <button
               key={name}
               onClick={() => handleSelect(name)}

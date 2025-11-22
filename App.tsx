@@ -1,9 +1,14 @@
+
 import React, { useState } from 'react';
 import TeamSelector from './components/TeamSelector';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import SquadView from './components/SquadView';
 import MatchView from './components/MatchView';
+import MarketView from './components/MarketView';
+import SocialView from './components/SocialView';
+import CopaView from './components/CopaView';
+import CareerView from './components/CareerView';
 import { Team, ScreenState } from './types';
 
 const App: React.FC = () => {
@@ -15,42 +20,55 @@ const App: React.FC = () => {
     setCurrentScreen(ScreenState.HOME);
   };
 
-  const handleNavigation = (screen: ScreenState) => {
-    setCurrentScreen(screen);
+  const handleUpdateTeam = (team: Team) => {
+    setUserTeam(team);
   };
 
-  if (!userTeam) {
+  const handleMatchFinish = (result: 'win' | 'loss' | 'draw') => {
+      // Simple match result logic for quick match
+      if (result === 'win' && userTeam) {
+          setUserTeam({ ...userTeam, budget: userTeam.budget + 100000 }); // Win bonus
+      }
+      setCurrentScreen(ScreenState.HOME);
+  };
+
+  const handleCopaWin = () => {
+      if (userTeam) {
+          setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Copa das Américas"] });
+      }
+  };
+
+  if (currentScreen === ScreenState.SELECT_TEAM) {
     return <TeamSelector onTeamSelected={handleTeamSelect} />;
   }
 
+  if (currentScreen === ScreenState.CAREER_MODE) {
+      return <CareerView onComplete={handleTeamSelect} onCancel={() => setCurrentScreen(ScreenState.HOME)} />;
+  }
+
+  if (!userTeam) return null;
+
+  // Full screen views (no bottom nav)
   if (currentScreen === ScreenState.MATCH) {
-    return (
-        <MatchView 
-            team={userTeam} 
-            onFinish={() => setCurrentScreen(ScreenState.HOME)} 
-        />
-    );
+    return <MatchView team={userTeam} onFinish={handleMatchFinish} />;
+  }
+  if (currentScreen === ScreenState.COPA_AMERICAS) {
+      return <CopaView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onWinTrophy={handleCopaWin} />;
   }
 
   return (
-    <Layout currentScreen={currentScreen} onNavigate={handleNavigation}>
+    <Layout currentScreen={currentScreen} onNavigate={setCurrentScreen}>
       {currentScreen === ScreenState.HOME && (
-        <Dashboard team={userTeam} onNavigate={handleNavigation} />
+        <Dashboard team={userTeam} onNavigate={setCurrentScreen} />
       )}
       {currentScreen === ScreenState.SQUAD && (
-        <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+        <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
       )}
-      {/* Placeholder for screens not yet fully implemented */}
-      {(currentScreen !== ScreenState.HOME && currentScreen !== ScreenState.SQUAD) && (
-        <div className="p-10 text-center text-slate-400 mt-20">
-            <p>Funcionalidade em desenvolvimento.</p>
-            <button 
-                onClick={() => setCurrentScreen(ScreenState.HOME)}
-                className="mt-4 text-emerald-600 font-medium underline"
-            >
-                Voltar
-            </button>
-        </div>
+      {currentScreen === ScreenState.MARKET && (
+        <MarketView team={userTeam} onUpdateTeam={handleUpdateTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+      {currentScreen === ScreenState.SOCIAL && (
+        <SocialView teamName={userTeam.name} />
       )}
     </Layout>
   );

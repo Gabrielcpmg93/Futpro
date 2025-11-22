@@ -1,3 +1,4 @@
+
 export enum Position {
   GK = 'GK',
   DEF = 'DEF',
@@ -11,16 +12,30 @@ export interface Player {
   position: Position;
   rating: number; // 1-99
   age: number;
+  salary: number; // Weekly salary
+  contractWeeks: number;
+  marketValue: number;
 }
 
 export interface Team {
   id: string;
-  originalName: string; // The real name chosen (e.g., Flamengo)
-  name: string; // The fictional name (e.g., Urubu Guerreiro)
+  originalName: string;
+  name: string;
   primaryColor: string;
   secondaryColor: string;
   roster: Player[];
   strength: number;
+  budget: number;
+  trophies: string[];
+}
+
+export interface SocialPost {
+  id: string;
+  authorName: string;
+  content: string;
+  likes: number;
+  comments: number;
+  liked: boolean;
 }
 
 export interface MatchResult {
@@ -37,5 +52,9 @@ export enum ScreenState {
   HOME = 'HOME',
   SQUAD = 'SQUAD',
   MATCH = 'MATCH',
+  SOCIAL = 'SOCIAL',
+  MARKET = 'MARKET',
+  COPA_AMERICAS = 'COPA_AMERICAS',
+  CAREER_MODE = 'CAREER_MODE',
   LOADING = 'LOADING',
 }
