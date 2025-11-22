@@ -68,6 +68,7 @@ const App: React.FC = () => {
               }
           }
           
+          // Navigate to table to show points update, then user can go back
           setCurrentScreen(ScreenState.LEAGUE_TABLE);
           return;
       }
@@ -97,10 +98,12 @@ const App: React.FC = () => {
   };
 
   const handleStartLeagueMatch = () => {
-      if (currentRound > TOTAL_LEAGUE_ROUNDS) return;
+      if (currentRound > TOTAL_LEAGUE_ROUNDS) {
+          alert("O campeonato acabou!");
+          return;
+      }
 
       // Pick random opponent from table (that is not user)
-      // In a real schedule, this would be pre-determined. Here we pick random distinct opponent.
       const possibleOpponents = leagueTable.filter(t => !t.isUser);
       const randomOpponent = possibleOpponents[Math.floor(Math.random() * possibleOpponents.length)];
       
@@ -152,7 +155,6 @@ const App: React.FC = () => {
             table={leagueTable}
             currentRound={currentRound}
             totalRounds={TOTAL_LEAGUE_ROUNDS}
-            onPlayMatch={handleStartLeagueMatch}
             onBack={() => setCurrentScreen(ScreenState.HOME)}
           />
       )
@@ -164,7 +166,12 @@ const App: React.FC = () => {
         <Dashboard team={userTeam} onNavigate={setCurrentScreen} onUpdateTeam={handleUpdateTeam} />
       )}
       {currentScreen === ScreenState.PLAY_HUB && (
-        <PlayHub team={userTeam} onNavigate={setCurrentScreen} />
+        <PlayHub 
+            team={userTeam} 
+            onNavigate={setCurrentScreen} 
+            onPlayLeagueMatch={handleStartLeagueMatch}
+            currentRound={currentRound}
+        />
       )}
       {currentScreen === ScreenState.SQUAD && (
         <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />

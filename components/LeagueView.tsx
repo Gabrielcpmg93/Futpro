@@ -1,17 +1,16 @@
 
 import React from 'react';
 import { LeagueTeam } from '../types';
-import { Trophy, ArrowLeft, Play, List } from 'lucide-react';
+import { Trophy, ArrowLeft } from 'lucide-react';
 
 interface LeagueViewProps {
     table: LeagueTeam[];
     currentRound: number;
     totalRounds: number;
-    onPlayMatch: () => void;
     onBack: () => void;
 }
 
-const LeagueView: React.FC<LeagueViewProps> = ({ table, currentRound, totalRounds, onPlayMatch, onBack }) => {
+const LeagueView: React.FC<LeagueViewProps> = ({ table, currentRound, totalRounds, onBack }) => {
     
     const userRank = table.findIndex(t => t.isUser) + 1;
 
@@ -71,28 +70,6 @@ const LeagueView: React.FC<LeagueViewProps> = ({ table, currentRound, totalRound
                         ))}
                     </div>
                 </div>
-            </div>
-
-            {/* Footer Action */}
-            <div className="p-4 bg-white border-t border-slate-100">
-                {currentRound <= totalRounds ? (
-                    <button 
-                        onClick={onPlayMatch}
-                        className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-emerald-500"
-                    >
-                        <Play fill="currentColor" size={20} />
-                        Jogar Rodada {currentRound}
-                    </button>
-                ) : (
-                    <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                        <h3 className="font-bold text-yellow-800">Temporada Finalizada!</h3>
-                        {userRank === 1 ? (
-                             <p className="text-sm text-yellow-700">Parabéns! Você é o campeão!</p>
-                        ) : (
-                             <p className="text-sm text-yellow-700">Fim de campeonato. Tente novamente na próxima!</p>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );
