@@ -84,14 +84,14 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
   }
 
   try {
-    // Ask AI to generate details, but use our hardcoded name if available
+    // Ask AI to generate details, but reduce payload to prevent JSON truncation
     const prompt = `
       Create a fictional football team based on "${realTeamName}".
       ${fictionalName ? `The name MUST be "${fictionalName}".` : 'Create a creative fictional name in Portuguese.'}
       2. Provide hex codes for primary/secondary colors.
-      3. Generate a list of 24 fictional players (GK, DEF, MID, FWD).
+      3. Generate 5 KEY players (The stars of the team).
          - Names must be creative Brazilian nicknames.
-         - Rating 60-95.
+         - Rating 80-95.
          - Age 17-35.
          - Market value (in millions, e.g. 1.5, 10.0).
       
@@ -109,7 +109,7 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
             fictionalName: { type: Type.STRING },
             primaryColor: { type: Type.STRING },
             secondaryColor: { type: Type.STRING },
-            players: {
+            keyPlayers: {
               type: Type.ARRAY,
               items: {
                 type: Type.OBJECT,
@@ -132,16 +132,54 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
 
     const data = JSON.parse(text);
 
-    const roster: Player[] = (data.players || []).map((p: any) => ({
+    // 1. Add AI generated stars
+    const roster: Player[] = (data.keyPlayers || []).map((p: any) => ({
       id: generateId(),
       name: p.name,
       position: p.position as Position,
       rating: p.rating,
       age: p.age,
-      salary: Math.floor(p.rating * 1500), // Simple salary formula
+      salary: Math.floor(p.rating * 1500),
       contractWeeks: Math.floor(Math.random() * 100) + 20,
-      marketValue: p.marketValue || 1.0
+      marketValue: p.marketValue || 5.0
     }));
+
+    // 2. Fill the rest to reach 24 players
+    const currentCount = roster.length;
+    const targetCount = 24;
+    
+    for (let i = currentCount; i < targetCount; i++) {
+         // Distribute positions for filler players
+         let pos = Position.MID;
+         if (i < 3) pos = Position.GK; // Ensure we have backup GKs
+         else if (i < 10) pos = Position.DEF;
+         else if (i < 18) pos = Position.MID;
+         else pos = Position.FWD;
+
+         // Overwrite if first AI players covered GKs? Unlikely to have 3.
+         // Just simple distribution logic for fillers:
+         if (i % 4 === 0) pos = Position.DEF;
+         else if (i % 4 === 1) pos = Position.MID;
+         else if (i % 4 === 2) pos = Position.FWD;
+         else pos = Position.GK;
+
+         roster.push({
+            id: generateId(),
+            name: getRandomName(),
+            position: pos,
+            rating: 65 + Math.floor(Math.random() * 15), // Lower rating for fillers
+            age: 18 + Math.floor(Math.random() * 15),
+            salary: 10000 + Math.floor(Math.random() * 10000),
+            contractWeeks: 48,
+            marketValue: 1.0 + Math.random() * 3
+         });
+    }
+
+    // Ensure at least one GK in the whole roster
+    if (!roster.some(p => p.position === Position.GK)) {
+        roster[roster.length - 1].position = Position.GK;
+        roster[roster.length - 1].name = "Paredão " + roster[roster.length - 1].name.split(' ')[1];
+    }
 
     const teamStrength = Math.floor(roster.reduce((acc, p) => acc + p.rating, 0) / roster.length);
 
