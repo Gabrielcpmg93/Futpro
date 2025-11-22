@@ -42,10 +42,10 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate }) => {
                 <div className="bg-blue-50 p-3 rounded-xl mb-4 text-blue-600">
                     <Users size={32} />
                 </div>
-                <h2 className="text-2xl font-bold mb-1">Amistoso</h2>
-                <p className="text-slate-500 text-sm mb-4">Escolha times fictícios da Série A e jogue sem compromisso.</p>
+                <h2 className="text-2xl font-bold mb-1">Amistoso Fictício</h2>
+                <p className="text-slate-500 text-sm mb-4">Escolha seu time fictício e jogue contra outro time fictício do Brasileirão Série A.</p>
                 <div className="flex items-center gap-2 text-blue-600 text-sm font-bold uppercase tracking-wide">
-                    Configurar <Play size={16} fill="currentColor" />
+                    Configurar Partida <Play size={16} fill="currentColor" />
                 </div>
             </div>
         </button>

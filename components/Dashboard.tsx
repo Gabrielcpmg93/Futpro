@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal } from 'lucide-react';
 import { Team, ScreenState } from '../types';
@@ -109,27 +110,7 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
           <div>
             <p className="text-violet-200 text-xs font-medium mb-1 uppercase tracking-wide">Modo Carreira</p>
             <h2 className="text-white text-2xl font-bold">Rumo ao Estrelato</h2>
-            <p className="text-violet-300 text-xs mt-1">Temporada de 80 Jogos</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Friendly Match */}
-      <div 
-        onClick={() => onNavigate(ScreenState.FRIENDLY_SETUP)}
-        className="w-full rounded-3xl p-6 relative overflow-hidden shadow-xl cursor-pointer group"
-        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}
-      >
-        <div className="relative z-10 flex flex-col h-full justify-between min-h-[100px]">
-          <div className="flex justify-between items-center">
-             <div className="w-10 h-10 bg-slate-800/50 backdrop-blur-sm rounded-xl flex items-center justify-center text-emerald-400 mb-2">
-                <Tv size={20} />
-             </div>
-             <span className="text-white text-xs bg-emerald-600 px-2 py-1 rounded">Amistoso</span>
-          </div>
-          <div>
-            <h2 className="text-white text-xl font-bold">Jogar Amistoso</h2>
-            <p className="text-slate-400 text-xs mt-1">Clubes Fictícios da Série A</p>
+            <p className="text-violet-300 text-xs mt-1">Temporada de 90 Jogos</p>
           </div>
         </div>
       </div>

@@ -1,23 +1,32 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Team, ScreenState } from '../types';
+import { Team } from '../types';
 import { simulateMatchCommentary } from '../services/geminiService';
-import { Trophy, Play, ArrowLeft, LayoutTemplate, Shield, Zap, Activity } from 'lucide-react';
+import { Play, Activity, Zap, Shield } from 'lucide-react';
 
 interface MatchViewProps {
   team: Team;
   onFinish: (result: 'win' | 'loss' | 'draw') => void;
   opponentName?: string;
+  opponentColor?: string;
+  skipSetup?: boolean;
 }
 
-const MatchView: React.FC<MatchViewProps> = ({ team, onFinish, opponentName = "Dragões do Sul" }) => {
-  const [viewState, setViewState] = useState<'MENU' | 'PLAYING' | 'FINISHED'>('MENU');
+const MatchView: React.FC<MatchViewProps> = ({ 
+  team, 
+  onFinish, 
+  opponentName = "Dragões do Sul",
+  opponentColor = "#dc2626",
+  skipSetup = false
+}) => {
+  const [viewState, setViewState] = useState<'MENU' | 'PLAYING' | 'FINISHED'>(skipSetup ? 'PLAYING' : 'MENU');
   const [score, setScore] = useState({ user: 0, opponent: 0 });
   const [commentaryLines, setCommentaryLines] = useState<string[]>([]);
   const [visibleLines, setVisibleLines] = useState<string[]>([]);
   const [tactic, setTactic] = useState<'attack' | 'defend' | 'possession'>('possession');
   
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasStartedRef = useRef(false);
 
   const startMatch = async () => {
     setViewState('PLAYING');
@@ -59,6 +68,13 @@ const MatchView: React.FC<MatchViewProps> = ({ team, onFinish, opponentName = "D
     }, 1500); // New line every 1.5 seconds
   };
 
+  useEffect(() => {
+      if (skipSetup && !hasStartedRef.current) {
+          hasStartedRef.current = true;
+          startMatch();
+      }
+  }, [skipSetup]);
+
   const handleFinish = () => {
       if (score.user > score.opponent) onFinish('win');
       else if (score.user < score.opponent) onFinish('loss');
@@ -79,7 +95,10 @@ const MatchView: React.FC<MatchViewProps> = ({ team, onFinish, opponentName = "D
                       </div>
                       <div className="text-2xl font-bold text-slate-600">VS</div>
                       <div className="text-center">
-                          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-2xl mb-2 mx-auto">⚔️</div>
+                          <div 
+                            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-2 mx-auto"
+                            style={{ backgroundColor: opponentColor }}
+                          >⚔️</div>
                           <span className="font-bold text-white text-sm">{opponentName}</span>
                       </div>
                   </div>
@@ -115,7 +134,10 @@ const MatchView: React.FC<MatchViewProps> = ({ team, onFinish, opponentName = "D
           </div>
           <div className="flex items-center gap-3">
               <span className="text-2xl font-mono font-bold text-white">{score.opponent}</span>
-              <div className="bg-red-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white">
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                style={{ backgroundColor: opponentColor }}
+              >
                   {opponentName.substring(0,2).toUpperCase()}
               </div>
           </div>
@@ -153,7 +175,9 @@ const MatchView: React.FC<MatchViewProps> = ({ team, onFinish, opponentName = "D
       <div className="flex-1 bg-slate-900 p-4 overflow-y-auto border-b border-slate-800" ref={scrollRef}>
           <div className="space-y-3">
               {visibleLines.length === 0 && (
-                  <p className="text-slate-500 text-center italic text-sm mt-4">Aguardando início...</p>
+                  <p className="text-slate-500 text-center italic text-sm mt-4">
+                      {skipSetup ? "A bola vai rolar..." : "Aguardando início..."}
+                  </p>
               )}
               {visibleLines.map((line, idx) => (
                   <div key={idx} className="flex gap-3 animate-in slide-in-from-left duration-300">

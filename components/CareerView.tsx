@@ -102,7 +102,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
 
     // If Playing a Match inside Career
     if (inCareerMatch && myTeam) {
-        return <MatchView team={myTeam} onFinish={handleMatchFinish} opponentName={careerOpponent} />;
+        return <MatchView team={myTeam} onFinish={handleMatchFinish} opponentName={careerOpponent} skipSetup={true} />;
     }
 
     return (
