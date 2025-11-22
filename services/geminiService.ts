@@ -53,6 +53,15 @@ export const COPA_TEAMS_MAPPING: Record<string, string> = {
   "Vélez Sarsfield": "Fortim de Liniers"
 };
 
+const FIRST_NAMES = ["Lucas", "Matheus", "Gabriel", "Enzo", "Pedro", "João", "Rafael", "Gustavo", "Felipe", "Bruno", "Thiago", "Diego", "Rodrigo", "André", "Eduardo", "Caio", "Vinícius", "Leonardo", "Igor", "Marcelo"];
+const LAST_NAMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa"];
+
+const getRandomName = () => {
+    const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    return `${first} ${last}`;
+};
+
 export const generateFictionalTeam = async (realTeamName: string): Promise<Team> => {
   // Check if we have a hardcoded mapping first
   let fictionalName = COPA_TEAMS_MAPPING[realTeamName];
@@ -155,7 +164,7 @@ export const generateMarketPlayers = (): Player[] => {
   const positions = [Position.FWD, Position.MID, Position.DEF, Position.GK];
   return Array.from({ length: 10 }).map((_, i) => ({
     id: `market-${i}`,
-    name: `Jogador Alvo ${i+1}`,
+    name: getRandomName(),
     position: positions[i % 4],
     rating: 70 + Math.floor(Math.random() * 20),
     age: 18 + Math.floor(Math.random() * 15),
@@ -167,12 +176,24 @@ export const generateMarketPlayers = (): Player[] => {
 
 export const simulateMatchCommentary = async (userTeamName: string, opponentName: string): Promise<string[]> => {
   const ai = getAiClient();
-  if (!ai) return ["Jogo emocionante!", "Grande defesa!", "Fim de jogo."];
+  // Provide meaningful defaults if AI fails
+  const defaults = [
+      `Começa o jogo entre ${userTeamName} e ${opponentName}!`,
+      `${userTeamName} troca passes no meio campo.`,
+      `Chute perigoso do ${opponentName}!`,
+      `Defesa espetacular do goleiro!`,
+      `Fim do primeiro tempo, jogo equilibrado.`,
+      `Bola rolando para o segundo tempo.`,
+      `Gol!!! A torcida vai à loucura!`,
+      `O árbitro apita o final da partida.`
+  ];
+
+  if (!ai) return defaults;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `Write 3 short, exciting soccer match commentary lines (in Portuguese) for a match between ${userTeamName} and ${opponentName}. DO NOT include the score. Just action.`,
+      contents: `Write 8 short, exciting soccer match commentary lines (in Portuguese) describing key moments for a match between ${userTeamName} and ${opponentName}. DO NOT include specific scores like "2-1".`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -183,10 +204,10 @@ export const simulateMatchCommentary = async (userTeamName: string, opponentName
     });
     const text = response.text;
     const lines = text ? JSON.parse(text) : [];
-    return lines.length > 0 ? lines : ["A bola rola no gramado!", "Lance perigoso!", "O juiz apita o fim."];
+    return lines.length > 0 ? lines : defaults;
   } catch (e) {
     console.error("Error generating commentary:", e);
-    return ["A torcida vibra!", "Bate e rebate na área...", "Que jogo tenso!"];
+    return defaults;
   }
 }
 
@@ -204,7 +225,7 @@ const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
     trophies: [],
     roster: Array.from({ length: 24 }).map((_, i) => ({
       id: `${i}`,
-      name: `Jogador ${i}`,
+      name: getRandomName(),
       position: i === 0 ? Position.GK : i < 8 ? Position.DEF : i < 16 ? Position.MID : Position.FWD,
       rating: 70 + Math.floor(Math.random() * 20),
       age: 18 + Math.floor(Math.random() * 15),
