@@ -4,7 +4,7 @@ import { Team, Player, Position, SocialPost } from "../types";
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    console.error("API_KEY is missing");
+    console.warn("API_KEY is missing, using offline mode");
     return null;
   }
   return new GoogleGenAI({ apiKey });
@@ -215,8 +215,17 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
       trophies: []
     };
 
-  } catch (error) {
-    console.error("Error generating team:", error);
+  } catch (error: any) {
+    // Handle permission denied or other API errors gracefully
+    const isPermissionError = error.toString().includes("403") || 
+                             (error.status === 403) || 
+                             (error.message && error.message.includes("PERMISSION_DENIED"));
+                             
+    if (isPermissionError) {
+        console.warn("Gemini API Permission Denied (403). Check your API key permissions. Falling back to offline generation.");
+    } else {
+        console.error("Error generating team with AI:", error);
+    }
     // Fallback if AI fails completely
     return mockTeamGeneration(realTeamName, fictionalName);
   }
@@ -250,8 +259,11 @@ export const generatePlayerReply = async (authorName: string, postContent: strin
     });
     
     return response.text?.trim() || defaultReply;
-  } catch (e) {
-    console.error("Error generating reply:", e);
+  } catch (e: any) {
+    const isPermissionError = e.toString().includes("403") || (e.status === 403);
+    if (!isPermissionError) {
+        console.error("Error generating reply:", e);
+    }
     return defaultReply;
   }
 };
@@ -300,8 +312,11 @@ export const simulateMatchCommentary = async (userTeamName: string, opponentName
     const text = response.text;
     const lines = text ? JSON.parse(text) : [];
     return lines.length > 0 ? lines : defaults;
-  } catch (e) {
-    console.error("Error generating commentary:", e);
+  } catch (e: any) {
+    const isPermissionError = e.toString().includes("403") || (e.status === 403);
+    if (!isPermissionError) {
+         console.error("Error generating commentary:", e);
+    }
     return defaults;
   }
 }
