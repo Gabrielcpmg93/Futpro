@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Team, Position, Player } from '../types';
-import { Shield, User, DollarSign, RefreshCw, Briefcase } from 'lucide-react';
+import { Shield, User, DollarSign, RefreshCw, Briefcase, Clock } from 'lucide-react';
 
 interface SquadViewProps {
   team: Team;
@@ -65,11 +65,17 @@ const SquadView: React.FC<SquadViewProps> = ({ team, onBack, onUpdateTeam }) => 
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 relative">
                     <User size={20} className="text-gray-400" />
-                    {player.contractWeeks < 10 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" title="Contrato acabando"></div>}
+                    {player.contractWeeks < 10 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full ring-2 ring-white" title="Contrato acabando"></div>}
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-800">{player.name}</h3>
-                  <p className="text-xs text-slate-400">Salário: ${player.salary}/sem</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                      <p className="text-xs text-slate-400">Salário: ${player.salary}/sem</p>
+                      <div className={`flex items-center gap-1 text-xs font-bold ${player.contractWeeks < 10 ? 'text-red-500' : 'text-slate-400'}`}>
+                         <Clock size={10} />
+                         {player.contractWeeks === 0 ? 'EXPIRADO' : `${player.contractWeeks} sem`}
+                      </div>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -89,7 +95,14 @@ const SquadView: React.FC<SquadViewProps> = ({ team, onBack, onUpdateTeam }) => 
       {selectedPlayer && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
               <div className="bg-white w-full max-w-sm rounded-3xl p-6 animate-in slide-in-from-bottom duration-200">
-                  <h2 className="text-xl font-bold mb-1">{selectedPlayer.name}</h2>
+                  <div className="flex justify-between items-start mb-1">
+                      <h2 className="text-xl font-bold">{selectedPlayer.name}</h2>
+                      {selectedPlayer.contractWeeks < 10 && (
+                          <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                              Contrato Crítico
+                          </span>
+                      )}
+                  </div>
                   <p className="text-slate-500 text-sm mb-6">O que deseja fazer com este atleta?</p>
 
                   {!action ? (
@@ -112,7 +125,7 @@ const SquadView: React.FC<SquadViewProps> = ({ team, onBack, onUpdateTeam }) => 
                             <div className="bg-purple-100 p-2 rounded-lg text-purple-600"><RefreshCw size={20}/></div>
                             <div className="text-left">
                                 <span className="block font-bold text-slate-800">Renovar</span>
-                                <span className="text-xs text-slate-500">Negociar salário e tempo</span>
+                                <span className="text-xs text-slate-500">Estender contrato (+52 semanas)</span>
                             </div>
                         </button>
                     </div>

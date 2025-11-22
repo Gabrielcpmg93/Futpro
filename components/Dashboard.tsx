@@ -61,13 +61,20 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
              </div>
              <p className="text-slate-800 font-bold text-sm">-{formatMoney(expenses)}/sem</p>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <button 
+            onClick={() => onNavigate(ScreenState.SQUAD)}
+            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left hover:bg-slate-50 transition-colors active:scale-95"
+          >
              <div className="flex items-center gap-2 mb-2">
-                <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600"><FileText size={16}/></div>
+                <div className={`p-1.5 rounded-lg ${expiringContracts > 0 ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                    <FileText size={16}/>
+                </div>
                 <span className="text-xs font-bold text-slate-500 uppercase">Contratos</span>
              </div>
-             <p className="text-slate-800 font-bold text-sm">{expiringContracts} vencendo</p>
-          </div>
+             <p className={`font-bold text-sm ${expiringContracts > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
+                 {expiringContracts} vencendo
+             </p>
+          </button>
       </div>
 
       {/* Skip Week Button */}

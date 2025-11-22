@@ -165,7 +165,7 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
           rating: p.rating,
           age: p.age,
           salary: Math.floor(p.rating * 1500),
-          contractWeeks: Math.floor(Math.random() * 100) + 20,
+          contractWeeks: 40, // Set to 40 as requested
           marketValue: p.marketValue || 5.0
        };
     });
@@ -190,7 +190,7 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
             rating: 65 + Math.floor(Math.random() * 15), // Lower rating for fillers
             age: 18 + Math.floor(Math.random() * 15),
             salary: 10000 + Math.floor(Math.random() * 10000),
-            contractWeeks: 48,
+            contractWeeks: 40, // Set to 40 as requested
             marketValue: 1.0 + Math.random() * 3
          });
     }
@@ -298,7 +298,7 @@ const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
       rating: 70 + Math.floor(Math.random() * 20),
       age: 18 + Math.floor(Math.random() * 15),
       salary: 25000,
-      contractWeeks: 48,
+      contractWeeks: 40, // Set to 40 as requested
       marketValue: 5.0
     }))
   };
