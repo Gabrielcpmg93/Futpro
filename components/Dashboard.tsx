@@ -1,20 +1,41 @@
 
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
   team: Team;
   onNavigate: (screen: ScreenState) => void;
+  onUpdateTeam: (team: Team) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam }) => {
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: "compact" }).format(val);
   };
 
   const expenses = team.roster.reduce((acc, p) => acc + p.salary, 0);
   const expiringContracts = team.roster.filter(p => p.contractWeeks < 10).length;
+
+  const handleSkipWeek = () => {
+    // Calculate new budget (deduct expenses)
+    const newBudget = team.budget - expenses;
+    
+    // Decrease contract weeks for all players
+    const newRoster = team.roster.map(p => ({
+      ...p,
+      contractWeeks: Math.max(0, p.contractWeeks - 1)
+    }));
+
+    onUpdateTeam({
+      ...team,
+      budget: newBudget,
+      roster: newRoster
+    });
+
+    // Visual feedback (optional, but good for UX)
+    // We rely on the UI updating immediately
+  };
 
   return (
     <div className="p-6 pt-8 pb-24 flex flex-col gap-4 animate-in fade-in duration-500">
@@ -25,7 +46,7 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
           <p className="text-slate-500 text-sm">Gestor do <span className="font-semibold text-slate-700">{team.name}</span></p>
         </div>
         <div className="flex flex-col items-end">
-            <span className="text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
+            <span className={`font-bold text-sm px-2 py-1 rounded-lg border ${team.budget < 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
                 {formatMoney(team.budget)}
             </span>
         </div>
@@ -48,6 +69,25 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
              <p className="text-slate-800 font-bold text-sm">{expiringContracts} vencendo</p>
           </div>
       </div>
+
+      {/* Skip Week Button */}
+      <button 
+        onClick={handleSkipWeek}
+        className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group active:scale-95 transition-all hover:bg-slate-50"
+      >
+         <div className="flex items-center gap-3">
+            <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+                <Calendar size={20} />
+            </div>
+            <div className="text-left">
+                <p className="text-sm font-bold text-slate-800">Pular Semana</p>
+                <p className="text-xs text-slate-400">Pagar salários e avançar tempo</p>
+            </div>
+         </div>
+         <div className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+            <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">+1</span>
+         </div>
+      </button>
 
       {/* Trophy Room Section */}
       {team.trophies.length > 0 ? (

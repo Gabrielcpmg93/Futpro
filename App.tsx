@@ -80,7 +80,7 @@ const App: React.FC = () => {
   return (
     <Layout currentScreen={currentScreen} onNavigate={setCurrentScreen}>
       {currentScreen === ScreenState.HOME && (
-        <Dashboard team={userTeam} onNavigate={setCurrentScreen} />
+        <Dashboard team={userTeam} onNavigate={setCurrentScreen} onUpdateTeam={handleUpdateTeam} />
       )}
       {currentScreen === ScreenState.PLAY_HUB && (
         <PlayHub team={userTeam} onNavigate={setCurrentScreen} />
