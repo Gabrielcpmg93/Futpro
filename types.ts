@@ -53,6 +53,19 @@ export interface MatchResult {
   draw: boolean;
 }
 
+export interface LeagueTeam {
+  id: string;
+  name: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  gf: number; // Goals For
+  ga: number; // Goals Against
+  isUser: boolean;
+}
+
 export enum ScreenState {
   SELECT_TEAM = 'SELECT_TEAM',
   HOME = 'HOME',
@@ -65,4 +78,5 @@ export enum ScreenState {
   CAREER_MODE = 'CAREER_MODE',
   LOADING = 'LOADING',
   PLAY_HUB = 'PLAY_HUB',
+  LEAGUE_TABLE = 'LEAGUE_TABLE',
 }

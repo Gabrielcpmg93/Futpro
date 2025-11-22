@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Team, Player, Position, SocialPost } from "../types";
+import { Team, Player, Position, SocialPost, LeagueTeam } from "../types";
 
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
@@ -343,4 +343,93 @@ const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
       marketValue: 5.0
     }))
   };
+};
+
+// --- LEAGUE FUNCTIONS ---
+
+export const generateLeagueTable = (userTeam: Team): LeagueTeam[] => {
+    const leagueTeams: LeagueTeam[] = [];
+    const fictionalNames = Object.values(SERIE_A_MAPPING);
+
+    // Add user team
+    leagueTeams.push({
+        id: userTeam.id,
+        name: userTeam.name,
+        played: 0, won: 0, drawn: 0, lost: 0, points: 0, gf: 0, ga: 0,
+        isUser: true
+    });
+
+    // Add CPU teams (filter out user team name if it exists in mapping to avoid duplicate)
+    fictionalNames.forEach((name, index) => {
+        if (name !== userTeam.name) {
+            leagueTeams.push({
+                id: `cpu-team-${index}`,
+                name: name,
+                played: 0, won: 0, drawn: 0, lost: 0, points: 0, gf: 0, ga: 0,
+                isUser: false
+            });
+        }
+    });
+
+    // Ensure 20 teams (if user team wasn't in mapping, we might have 21, so trim or if user selected one from mapping, we have 20)
+    return leagueTeams.slice(0, 20);
+};
+
+export const updateLeagueTable = (
+    currentTable: LeagueTeam[], 
+    userResult: 'win' | 'loss' | 'draw', 
+    userGoalsFor: number, 
+    userGoalsAgainst: number
+): LeagueTeam[] => {
+    return currentTable.map(team => {
+        if (team.isUser) {
+            return {
+                ...team,
+                played: team.played + 1,
+                won: team.won + (userResult === 'win' ? 1 : 0),
+                drawn: team.drawn + (userResult === 'draw' ? 1 : 0),
+                lost: team.lost + (userResult === 'loss' ? 1 : 0),
+                points: team.points + (userResult === 'win' ? 3 : (userResult === 'draw' ? 1 : 0)),
+                gf: team.gf + userGoalsFor,
+                ga: team.ga + userGoalsAgainst
+            };
+        } else {
+            // Simulate CPU match
+            // Simple simulation: random result
+            const r = Math.random();
+            let res: 'win' | 'loss' | 'draw';
+            let gf = 0;
+            let ga = 0;
+
+            if (r < 0.35) { // Win
+                res = 'win';
+                gf = Math.floor(Math.random() * 3) + 1;
+                ga = Math.floor(Math.random() * gf);
+            } else if (r < 0.65) { // Loss
+                res = 'loss';
+                ga = Math.floor(Math.random() * 3) + 1;
+                gf = Math.floor(Math.random() * ga);
+            } else { // Draw
+                res = 'draw';
+                gf = Math.floor(Math.random() * 2);
+                ga = gf;
+            }
+
+            return {
+                ...team,
+                played: team.played + 1,
+                won: team.won + (res === 'win' ? 1 : 0),
+                drawn: team.drawn + (res === 'draw' ? 1 : 0),
+                lost: team.lost + (res === 'loss' ? 1 : 0),
+                points: team.points + (res === 'win' ? 3 : (res === 'draw' ? 1 : 0)),
+                gf: team.gf + gf,
+                ga: team.ga + ga
+            };
+        }
+    }).sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        const gdA = a.gf - a.ga;
+        const gdB = b.gf - b.ga;
+        return gdB - gdA;
+    });
 };
