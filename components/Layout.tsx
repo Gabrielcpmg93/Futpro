@@ -13,7 +13,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onNavigate }) 
   const navItems = [
     { id: ScreenState.HOME, label: 'Início', icon: <Home size={24} /> },
     { id: ScreenState.SOCIAL, label: 'Social', icon: <MessageSquare size={24} /> },
-    { id: ScreenState.MATCH, label: 'Jogar', icon: <PlayCircle size={24} /> },
+    { id: ScreenState.PLAY_HUB, label: 'Jogar', icon: <PlayCircle size={24} /> },
     { id: ScreenState.SQUAD, label: 'Elenco', icon: <Users size={24} /> },
     { id: ScreenState.MARKET, label: 'Mercado', icon: <ShoppingBag size={24} /> },
   ];

@@ -10,6 +10,7 @@ import SocialView from './components/SocialView';
 import CopaView from './components/CopaView';
 import CareerView from './components/CareerView';
 import FriendlyView from './components/FriendlyView';
+import PlayHub from './components/PlayHub';
 import { Team, ScreenState } from './types';
 
 const App: React.FC = () => {
@@ -63,7 +64,7 @@ const App: React.FC = () => {
   }
 
   if (currentScreen === ScreenState.FRIENDLY_SETUP) {
-      return <FriendlyView onBack={() => setCurrentScreen(ScreenState.HOME)} />;
+      return <FriendlyView onBack={() => setCurrentScreen(ScreenState.PLAY_HUB)} />;
   }
 
   if (!userTeam) return null;
@@ -80,6 +81,9 @@ const App: React.FC = () => {
     <Layout currentScreen={currentScreen} onNavigate={setCurrentScreen}>
       {currentScreen === ScreenState.HOME && (
         <Dashboard team={userTeam} onNavigate={setCurrentScreen} />
+      )}
+      {currentScreen === ScreenState.PLAY_HUB && (
+        <PlayHub team={userTeam} onNavigate={setCurrentScreen} />
       )}
       {currentScreen === ScreenState.SQUAD && (
         <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />

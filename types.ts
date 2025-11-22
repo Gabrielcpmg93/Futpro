@@ -58,4 +58,5 @@ export enum ScreenState {
   COPA_AMERICAS = 'COPA_AMERICAS',
   CAREER_MODE = 'CAREER_MODE',
   LOADING = 'LOADING',
+  PLAY_HUB = 'PLAY_HUB',
 }
