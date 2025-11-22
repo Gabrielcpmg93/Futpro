@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Team, Position } from '../types';
 import { SERIE_A_MAPPING } from '../services/geminiService';
-import { Star, User, ArrowRight, MapPin, Calendar, Trophy, Activity, Play } from 'lucide-react';
+import { Star, User, ArrowRight, MapPin, Calendar, Trophy, Activity, Play, CheckCircle, ArrowLeft } from 'lucide-react';
 import MatchView from './MatchView';
 
 interface CareerViewProps {
@@ -20,7 +21,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
     
     // Season Stats
     const [gamesPlayed, setGamesPlayed] = useState(0);
-    const TOTAL_GAMES = 80;
+    const TOTAL_GAMES = 90;
 
     // Fictional Serie A opponents using the mapping
     const CAREER_OPPONENTS = Object.values(SERIE_A_MAPPING);
@@ -81,7 +82,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
         if (newGamesPlayed === TOTAL_GAMES) {
             // Season Finished
             onWinTrophy();
-            alert("Parabéns! Você completou a temporada de 80 jogos e conquistou o Troféu Estrelato!");
+            alert("Parabéns! Você completou a temporada de 90 jogos e conquistou o Troféu Estrelato!");
         } else {
             if (result === 'win') {
                 // Small budget boost
@@ -91,6 +92,10 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
 
     const exitCareer = () => {
         if (myTeam) onComplete(myTeam);
+    };
+
+    const goToSeasonMenu = () => {
+        setStep(5);
     };
 
     // If Playing a Match inside Career
@@ -204,15 +209,20 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                             <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 mb-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <span className="text-sm text-slate-400">Brasileirão Série A</span>
-                                    <span className="bg-slate-700 px-2 py-1 rounded text-xs font-mono">Jogo {gamesPlayed + 1}</span>
+                                    <span className="bg-slate-700 px-2 py-1 rounded text-xs font-mono">Temporada Regular</span>
                                 </div>
                                 <div className="flex items-center justify-between mb-6">
-                                    <span className="font-bold">{myTeam.name}</span>
-                                    <span className="text-slate-500 text-xs">vs</span>
-                                    <span className="font-bold text-right">Adversário da Liga</span>
+                                    <div className="flex items-center gap-2">
+                                         <div className="w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center font-bold text-xs">
+                                            {myTeam.name.substring(0,2)}
+                                         </div>
+                                         <span className="font-bold text-sm">{myTeam.name}</span>
+                                    </div>
+                                    <span className="text-slate-500 text-xs mx-2">vs</span>
+                                    <span className="font-bold text-right text-sm text-slate-400">Próximo Adversário</span>
                                 </div>
                                 <button 
-                                    onClick={startCareerMatch} 
+                                    onClick={goToSeasonMenu} 
                                     className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
                                 >
                                     <Play size={20} /> Ir para o Jogo
@@ -235,6 +245,55 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                              </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {step === 5 && myTeam && (
+                <div className="flex-1 flex flex-col bg-slate-900 p-6 animate-in slide-in-from-right">
+                    <div className="flex items-center gap-4 mb-6">
+                        <button onClick={() => setStep(4)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700">
+                            <ArrowLeft size={20} />
+                        </button>
+                        <div>
+                            <h2 className="text-xl font-bold">Temporada {myTeam.name}</h2>
+                            <p className="text-sm text-slate-400">{gamesPlayed} de {TOTAL_GAMES} partidas jogadas</p>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
+                        <div className="grid grid-cols-5 gap-3">
+                            {Array.from({ length: TOTAL_GAMES }).map((_, i) => {
+                                const isPlayed = i < gamesPlayed;
+                                const isNext = i === gamesPlayed;
+                                return (
+                                    <button
+                                        key={i}
+                                        disabled={!isNext}
+                                        onClick={isNext ? startCareerMatch : undefined}
+                                        className={`
+                                            aspect-square rounded-xl flex flex-col items-center justify-center text-xs font-bold border transition-all
+                                            ${isPlayed 
+                                                ? 'bg-emerald-600 border-emerald-500 text-white opacity-50' 
+                                                : isNext 
+                                                    ? 'bg-yellow-500 border-yellow-400 text-slate-900 scale-110 shadow-lg shadow-yellow-500/20 animate-pulse cursor-pointer' 
+                                                    : 'bg-slate-700 border-slate-600 text-slate-500 opacity-30 cursor-not-allowed'
+                                            }
+                                        `}
+                                    >
+                                        {isPlayed ? <CheckCircle size={16}/> : <span>{i + 1}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                     <div className="mt-4 p-4 bg-slate-800 rounded-xl border border-slate-700 text-center">
+                        {gamesPlayed < TOTAL_GAMES ? (
+                             <p className="text-slate-300 text-sm">Próximo desafio: <span className="font-bold text-white">Rodada {gamesPlayed + 1}</span></p>
+                        ) : (
+                            <p className="text-emerald-400 font-bold">Temporada Finalizada!</p>
+                        )}
+                     </div>
                 </div>
             )}
         </div>
