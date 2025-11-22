@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Team, Position } from '../types';
 import { SERIE_A_MAPPING } from '../services/geminiService';
-import { Star, User, ArrowRight, MapPin, Calendar, Trophy, Activity } from 'lucide-react';
+import { Star, User, ArrowRight, MapPin, Calendar, Trophy, Activity, Play } from 'lucide-react';
 import MatchView from './MatchView';
 
 interface CareerViewProps {
@@ -85,9 +84,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
             alert("Parabéns! Você completou a temporada de 80 jogos e conquistou o Troféu Estrelato!");
         } else {
             if (result === 'win') {
-                alert("Vitória! +3 Pontos na tabela.");
-            } else {
-                alert("Fim de jogo.");
+                // Small budget boost
             }
         }
     };
@@ -136,7 +133,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                             <h2 className="text-2xl font-bold mb-4">Partida de Peneira</h2>
                             <p className="mb-6 text-violet-200">Esta é sua chance. Jogue bem para receber propostas de grandes clubes.</p>
                             <button onClick={handleMatchSim} className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
-                                <PlayIcon /> Jogar Peneira
+                                <Play size={20} /> Jogar Peneira
                             </button>
                         </div>
                     )}
@@ -218,14 +215,14 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                                     onClick={startCareerMatch} 
                                     className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
                                 >
-                                    <PlayIcon /> Ir para o Jogo
+                                    <Play size={20} /> Ir para o Jogo
                                 </button>
                             </div>
                         ) : (
                             <div className="bg-yellow-500 text-slate-900 p-6 rounded-2xl mb-6 text-center animate-bounce">
                                 <Trophy className="mx-auto mb-2" size={40} />
                                 <h3 className="font-bold text-xl">Temporada Finalizada!</h3>
-                                <p className="text-sm font-medium">Você completou os 80 jogos.</p>
+                                <p className="text-sm font-medium">Você conquistou o Troféu Estrelato!</p>
                             </div>
                         )}
 
@@ -243,7 +240,5 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
         </div>
     );
 };
-
-const PlayIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>;
 
 export default CareerView;

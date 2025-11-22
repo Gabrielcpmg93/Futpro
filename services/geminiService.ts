@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Team, Player, Position, SocialPost } from "../types";
 
@@ -13,8 +12,8 @@ const getAiClient = () => {
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-// Using gemini-2.0-flash-exp as it is stable and fast
-const MODEL_NAME = "gemini-2.0-flash-exp";
+// Use gemini-2.5-flash for better stability and instruction compliance
+const MODEL_NAME = "gemini-2.5-flash";
 
 // Mapping for Copa America
 export const COPA_TEAMS_MAPPING: Record<string, string> = {
@@ -73,9 +72,22 @@ const getRandomName = () => {
     return `${first} ${last}`;
 };
 
-export const generateFictionalTeam = async (realTeamName: string): Promise<Team> => {
-  // Check mappings
-  let fictionalName = COPA_TEAMS_MAPPING[realTeamName] || SERIE_A_MAPPING[realTeamName];
+export const generateFictionalTeam = async (teamNameInput: string): Promise<Team> => {
+  // Check if input is already a fictional name (from mapping values)
+  const isFictionalInput = Object.values(SERIE_A_MAPPING).includes(teamNameInput) || Object.values(COPA_TEAMS_MAPPING).includes(teamNameInput);
+  
+  let realTeamName = teamNameInput;
+  let fictionalName = teamNameInput;
+
+  if (!isFictionalInput) {
+      // If input is "Flamengo", find "Urubu Guerreiro"
+      fictionalName = COPA_TEAMS_MAPPING[teamNameInput] || SERIE_A_MAPPING[teamNameInput];
+  } else {
+      // If input is "Urubu Guerreiro", keep it as fictionalName.
+      // Try to find original name for context if possible, otherwise use input
+      const foundReal = Object.keys(SERIE_A_MAPPING).find(key => SERIE_A_MAPPING[key] === teamNameInput);
+      if (foundReal) realTeamName = foundReal;
+  }
   
   const ai = getAiClient();
   
@@ -84,18 +96,20 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
   }
 
   try {
-    // Ask AI to generate details, but reduce payload to prevent JSON truncation
+    // Ask AI to generate only 5 key players to keep response small and prevent JSON truncation
     const prompt = `
-      Create a fictional football team based on "${realTeamName}".
-      ${fictionalName ? `The name MUST be "${fictionalName}".` : 'Create a creative fictional name in Portuguese.'}
-      2. Provide hex codes for primary/secondary colors.
-      3. Generate 5 KEY players (The stars of the team).
-         - Names must be creative Brazilian nicknames.
-         - Rating 80-95.
-         - Age 17-35.
-         - Market value (in millions, e.g. 1.5, 10.0).
+      Create a fictional football team based on the style of "${realTeamName}".
+      ${fictionalName ? `The team name MUST be "${fictionalName}".` : 'Create a creative fictional name in Portuguese.'}
       
-      Output JSON.
+      Requirements:
+      1. Provide hex codes for primary/secondary colors.
+      2. Generate exactly 5 KEY players (The stars/leaders of the team).
+         - Names: Creative Brazilian nicknames preferred.
+         - Rating: 80-95.
+         - Age: 17-35.
+         - Market value: float (millions).
+      
+      Output concise JSON.
     `;
 
     const response = await ai.models.generateContent({
@@ -115,7 +129,7 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
                 type: Type.OBJECT,
                 properties: {
                   name: { type: Type.STRING },
-                  position: { type: Type.STRING, enum: ["GK", "DEF", "MID", "FWD"] },
+                  position: { type: Type.STRING },
                   rating: { type: Type.INTEGER },
                   age: { type: Type.INTEGER },
                   marketValue: { type: Type.NUMBER }
@@ -127,41 +141,47 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
       },
     });
 
-    const text = response.text;
+    let text = response.text;
     if (!text) throw new Error("No response text");
+
+    // Clean potential markdown formatting just in case
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     const data = JSON.parse(text);
 
-    // 1. Add AI generated stars
-    const roster: Player[] = (data.keyPlayers || []).map((p: any) => ({
-      id: generateId(),
-      name: p.name,
-      position: p.position as Position,
-      rating: p.rating,
-      age: p.age,
-      salary: Math.floor(p.rating * 1500),
-      contractWeeks: Math.floor(Math.random() * 100) + 20,
-      marketValue: p.marketValue || 5.0
-    }));
+    // 1. Add AI generated stars with position normalization
+    const roster: Player[] = (data.keyPlayers || []).map((p: any) => {
+       let pos = Position.MID;
+       // Loose matching for position safety
+       const pStr = (p.position || "").toUpperCase();
+       if (pStr.includes("GK") || pStr.includes("GOAL")) pos = Position.GK;
+       else if (pStr.includes("DEF") || pStr.includes("BACK") || pStr.includes("ZAG")) pos = Position.DEF;
+       else if (pStr.includes("FWD") || pStr.includes("ATT") || pStr.includes("ATA")) pos = Position.FWD;
 
-    // 2. Fill the rest to reach 24 players
-    const currentCount = roster.length;
+       return {
+          id: generateId(),
+          name: p.name,
+          position: pos,
+          rating: p.rating,
+          age: p.age,
+          salary: Math.floor(p.rating * 1500),
+          contractWeeks: Math.floor(Math.random() * 100) + 20,
+          marketValue: p.marketValue || 5.0
+       };
+    });
+
+    // 2. Fill the rest to reach 24 players programmatically
+    // This prevents token limit errors from the AI
     const targetCount = 24;
+    const currentCount = roster.length;
     
     for (let i = currentCount; i < targetCount; i++) {
-         // Distribute positions for filler players
          let pos = Position.MID;
-         if (i < 3) pos = Position.GK; // Ensure we have backup GKs
-         else if (i < 10) pos = Position.DEF;
-         else if (i < 18) pos = Position.MID;
+         // Ensure basics covered
+         if (i < currentCount + 2) pos = Position.GK; 
+         else if (i < currentCount + 8) pos = Position.DEF;
+         else if (i < currentCount + 14) pos = Position.MID;
          else pos = Position.FWD;
-
-         // Overwrite if first AI players covered GKs? Unlikely to have 3.
-         // Just simple distribution logic for fillers:
-         if (i % 4 === 0) pos = Position.DEF;
-         else if (i % 4 === 1) pos = Position.MID;
-         else if (i % 4 === 2) pos = Position.FWD;
-         else pos = Position.GK;
 
          roster.push({
             id: generateId(),
@@ -175,7 +195,7 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
          });
     }
 
-    // Ensure at least one GK in the whole roster
+    // Ensure at least one GK
     if (!roster.some(p => p.position === Position.GK)) {
         roster[roster.length - 1].position = Position.GK;
         roster[roster.length - 1].name = "Paredão " + roster[roster.length - 1].name.split(' ')[1];
@@ -197,6 +217,7 @@ export const generateFictionalTeam = async (realTeamName: string): Promise<Team>
 
   } catch (error) {
     console.error("Error generating team:", error);
+    // Fallback if AI fails completely
     return mockTeamGeneration(realTeamName, fictionalName);
   }
 };
@@ -225,7 +246,6 @@ export const generateMarketPlayers = (): Player[] => {
 
 export const simulateMatchCommentary = async (userTeamName: string, opponentName: string): Promise<string[]> => {
   const ai = getAiClient();
-  // Provide meaningful defaults if AI fails
   const defaults = [
       `Começa o jogo entre ${userTeamName} e ${opponentName}!`,
       `${userTeamName} troca passes no meio campo.`,
@@ -242,7 +262,7 @@ export const simulateMatchCommentary = async (userTeamName: string, opponentName
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `Write 8 short, exciting soccer match commentary lines (in Portuguese) describing key moments for a match between ${userTeamName} and ${opponentName}. DO NOT include specific scores like "2-1".`,
+      contents: `Write 8 short, exciting soccer match commentary lines (in Portuguese) for ${userTeamName} vs ${opponentName}.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -260,7 +280,6 @@ export const simulateMatchCommentary = async (userTeamName: string, opponentName
   }
 }
 
-// Fallback
 const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
   const name = fictionalName || `Nova ${realName}`;
   return {

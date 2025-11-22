@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
@@ -49,15 +48,30 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
           </div>
       </div>
 
-      {/* Trophy Room Preview */}
-      {team.trophies.length > 0 && (
-         <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 flex items-center gap-3">
-            <Award className="text-yellow-600" />
-            <div>
-                <h3 className="text-yellow-800 font-bold text-sm">Sala de Troféus</h3>
-                <p className="text-yellow-600 text-xs">{team.trophies.join(", ")}</p>
+      {/* Trophy Room Section */}
+      {team.trophies.length > 0 ? (
+         <div className="bg-gradient-to-r from-yellow-100 to-orange-50 p-5 rounded-2xl border border-yellow-200 relative overflow-hidden">
+            <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center text-yellow-700">
+                   <Trophy size={20} />
+                </div>
+                <div>
+                    <h3 className="text-yellow-900 font-bold">Sala de Troféus</h3>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                       {team.trophies.map((t, i) => (
+                           <span key={i} className="text-[10px] bg-white/60 text-yellow-800 px-2 py-0.5 rounded font-semibold border border-yellow-200/50 flex items-center gap-1">
+                              <Medal size={10} /> {t}
+                           </span>
+                       ))}
+                    </div>
+                </div>
             </div>
          </div>
+      ) : (
+        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 border-dashed flex items-center gap-3 opacity-60">
+           <Trophy className="text-slate-300" />
+           <p className="text-slate-400 text-xs font-medium">Sua galeria de troféus está vazia. Vença campeonatos!</p>
+        </div>
       )}
 
       {/* Copa das Américas */}
@@ -115,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate }) => {
           </div>
           <div>
             <h2 className="text-white text-xl font-bold">Jogar Amistoso</h2>
-            <p className="text-slate-400 text-xs mt-1">Escolha times da Série A Fictícia</p>
+            <p className="text-slate-400 text-xs mt-1">Clubes Fictícios da Série A</p>
           </div>
         </div>
       </div>
