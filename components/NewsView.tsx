@@ -26,7 +26,7 @@ const NewsView: React.FC<NewsViewProps> = ({ news, onBack }) => {
 
         {/* Header */}
         <div className="border-b-4 border-black p-4 text-center">
-             <h1 className="text-4xl font-black uppercase tracking-tighter font-serif">GAZETA DA BOLA</h1>
+             <h1 className="text-4xl font-black uppercase tracking-tighter font-serif">CP DA BOLA</h1>
              <div className="flex justify-between items-center text-[10px] font-bold uppercase mt-2 border-t border-black pt-1">
                  <span>Edição Diária</span>
                  <span>R$ 2,50</span>
