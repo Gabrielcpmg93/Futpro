@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Team, Player, Position, SocialPost, LeagueTeam, NewsArticle } from "../types";
 
@@ -63,8 +64,8 @@ export const SERIE_A_MAPPING: Record<string, string> = {
   "Atlético Goianiense": "Dragão do Centro"
 };
 
-const FIRST_NAMES = ["Lucas", "Matheus", "Gabriel", "Enzo", "Pedro", "João", "Rafael", "Gustavo", "Felipe", "Bruno", "Thiago", "Diego", "Rodrigo", "André", "Eduardo", "Caio", "Vinícius", "Leonardo", "Igor", "Marcelo"];
-const LAST_NAMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa"];
+const FIRST_NAMES = ["Lucas", "Matheus", "Gabriel", "Enzo", "Pedro", "João", "Rafael", "Gustavo", "Felipe", "Bruno", "Thiago", "Diego", "Rodrigo", "André", "Eduardo", "Caio", "Vinícius", "Leonardo", "Igor", "Marcelo", "Yuri", "Kauan", "Pablo"];
+const LAST_NAMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa", "Nascimento", "Batista"];
 
 const getRandomName = () => {
     const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
@@ -90,6 +91,20 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
   }
   
   const ai = getAiClient();
+  
+  // Helper to generate youth players locally to save API tokens/complexity
+  const generateYouth = (): Player[] => {
+      return Array.from({ length: 6 }).map((_, i) => ({
+          id: `youth-${generateId()}`,
+          name: getRandomName(),
+          position: i % 2 === 0 ? Position.MID : (i % 3 === 0 ? Position.FWD : Position.DEF),
+          rating: 55 + Math.floor(Math.random() * 10), // Lower rating for youth
+          age: 17 + Math.floor(Math.random() * 4), // 17-20 years old
+          salary: 2000,
+          contractWeeks: 104, // Long contract
+          marketValue: 0.5 + Math.random() // Low value initially
+      }));
+  };
   
   if (!ai) {
     return mockTeamGeneration(realTeamName, fictionalName);
@@ -210,6 +225,7 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
       primaryColor: data.primaryColor || "#000000",
       secondaryColor: data.secondaryColor || "#ffffff",
       roster: roster,
+      youthAcademy: generateYouth(),
       strength: teamStrength,
       budget: 50000000, // 50M budget start
       trophies: []
@@ -384,6 +400,28 @@ export const generatePostMatchNews = async (userTeam: string, opponent: string, 
 
 const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
   const name = fictionalName || `Nova ${realName}`;
+  const roster = Array.from({ length: 24 }).map((_, i) => ({
+      id: `${i}`,
+      name: getRandomName(),
+      position: i === 0 ? Position.GK : i < 8 ? Position.DEF : i < 16 ? Position.MID : Position.FWD,
+      rating: 70 + Math.floor(Math.random() * 20),
+      age: 18 + Math.floor(Math.random() * 15),
+      salary: 25000,
+      contractWeeks: 40,
+      marketValue: 5.0
+    }));
+
+  const youthAcademy = Array.from({ length: 6 }).map((_, i) => ({
+      id: `youth-${i}`,
+      name: getRandomName(),
+      position: i % 2 === 0 ? Position.MID : (i % 3 === 0 ? Position.FWD : Position.DEF),
+      rating: 55 + Math.floor(Math.random() * 10),
+      age: 17 + Math.floor(Math.random() * 4),
+      salary: 2000,
+      contractWeeks: 104,
+      marketValue: 0.5 + Math.random()
+  }));
+
   return {
     id: "mock-1",
     originalName: realName,
@@ -393,16 +431,8 @@ const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
     strength: 75,
     budget: 50000000,
     trophies: [],
-    roster: Array.from({ length: 24 }).map((_, i) => ({
-      id: `${i}`,
-      name: getRandomName(),
-      position: i === 0 ? Position.GK : i < 8 ? Position.DEF : i < 16 ? Position.MID : Position.FWD,
-      rating: 70 + Math.floor(Math.random() * 20),
-      age: 18 + Math.floor(Math.random() * 15),
-      salary: 25000,
-      contractWeeks: 40,
-      marketValue: 5.0
-    }))
+    roster: roster,
+    youthAcademy: youthAcademy
   };
 };
 

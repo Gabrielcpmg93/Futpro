@@ -24,6 +24,7 @@ export interface Team {
   primaryColor: string;
   secondaryColor: string;
   roster: Player[];
+  youthAcademy: Player[]; // New property for Youth Academy
   strength: number;
   budget: number;
   trophies: string[];
@@ -88,4 +89,5 @@ export enum ScreenState {
   PLAY_HUB = 'PLAY_HUB',
   LEAGUE_TABLE = 'LEAGUE_TABLE',
   NEWS = 'NEWS',
+  YOUTH_ACADEMY = 'YOUTH_ACADEMY',
 }

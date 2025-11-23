@@ -13,6 +13,7 @@ import FriendlyView from './components/FriendlyView';
 import PlayHub from './components/PlayHub';
 import LeagueView from './components/LeagueView';
 import NewsView from './components/NewsView';
+import YouthAcademyView from './components/YouthAcademyView';
 import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
@@ -181,6 +182,10 @@ const App: React.FC = () => {
 
   if (currentScreen === ScreenState.NEWS) {
       return <NewsView news={latestNews} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+  }
+
+  if (currentScreen === ScreenState.YOUTH_ACADEMY) {
+      return <YouthAcademyView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
   }
 
   return (

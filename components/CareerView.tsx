@@ -59,7 +59,8 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                 salary: 5000,
                 contractWeeks: 52,
                 marketValue: 1.0
-            }))
+            })),
+            youthAcademy: []
         };
         setMyTeam(newTeam);
         setStep(4); // Go to Career Hub
