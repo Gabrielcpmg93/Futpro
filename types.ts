@@ -90,4 +90,5 @@ export enum ScreenState {
   LEAGUE_TABLE = 'LEAGUE_TABLE',
   NEWS = 'NEWS',
   YOUTH_ACADEMY = 'YOUTH_ACADEMY',
+  CALENDAR = 'CALENDAR',
 }

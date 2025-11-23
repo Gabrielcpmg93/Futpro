@@ -96,7 +96,24 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
          </div>
       </button>
 
-      {/* Base (Youth Academy) Button - NEW */}
+      {/* Calendar Button - NEW */}
+      <button 
+        onClick={() => onNavigate(ScreenState.CALENDAR)}
+        className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 group active:scale-95 transition-all hover:bg-slate-50"
+      >
+         <div className="bg-fuchsia-100 p-2 rounded-xl text-fuchsia-600">
+            <Calendar size={20} />
+         </div>
+         <div className="text-left">
+            <p className="text-sm font-bold text-slate-800">Calendário</p>
+            <p className="text-xs text-slate-400">Agendar amistosos e ver datas</p>
+         </div>
+         <div className="ml-auto bg-slate-50 p-2 rounded-full">
+            <ArrowRight size={16} className="text-slate-300 group-hover:text-fuchsia-600" />
+         </div>
+      </button>
+
+      {/* Base (Youth Academy) Button */}
       <button 
         onClick={() => onNavigate(ScreenState.YOUTH_ACADEMY)}
         className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 group active:scale-95 transition-all hover:bg-slate-50"

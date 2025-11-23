@@ -14,6 +14,7 @@ import PlayHub from './components/PlayHub';
 import LeagueView from './components/LeagueView';
 import NewsView from './components/NewsView';
 import YouthAcademyView from './components/YouthAcademyView';
+import CalendarView from './components/CalendarView';
 import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
@@ -147,7 +148,7 @@ const App: React.FC = () => {
   }
 
   if (currentScreen === ScreenState.FRIENDLY_SETUP) {
-      return <FriendlyView onBack={() => setCurrentScreen(ScreenState.PLAY_HUB)} />;
+      return <FriendlyView onBack={() => setCurrentScreen(ScreenState.HOME)} />;
   }
 
   if (!userTeam) return null;
@@ -186,6 +187,15 @@ const App: React.FC = () => {
 
   if (currentScreen === ScreenState.YOUTH_ACADEMY) {
       return <YouthAcademyView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
+  }
+
+  if (currentScreen === ScreenState.CALENDAR) {
+    return (
+      <CalendarView 
+        onBack={() => setCurrentScreen(ScreenState.HOME)} 
+        onScheduleFriendly={() => setCurrentScreen(ScreenState.FRIENDLY_SETUP)}
+      />
+    );
   }
 
   return (
