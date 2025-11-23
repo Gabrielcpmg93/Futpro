@@ -49,15 +49,17 @@ const App: React.FC = () => {
     setUserTeam(team);
   };
 
-  const handleMatchFinish = async (result: 'win' | 'loss' | 'draw') => {
+  const handleMatchFinish = async (result: 'win' | 'loss' | 'draw', userScore: number = 0, opponentScore: number = 0) => {
       let opponent = "Adversário";
-      let gf = 0;
-      let ga = 0;
+      let gf = userScore;
+      let ga = opponentScore;
 
-      // Determine score and opponent based on match type
-      if (result === 'win') { gf = 2; ga = 1; }
-      else if (result === 'loss') { gf = 0; ga = 2; }
-      else { gf = 1; ga = 1; }
+      // Fallback if numbers are 0 and result suggests otherwise (unlikely with new MatchView, but safe fallback)
+      if (gf === 0 && ga === 0) {
+           if (result === 'win') { gf = 2; ga = 1; }
+           else if (result === 'loss') { gf = 0; ga = 2; }
+           else { gf = 1; ga = 1; }
+      }
 
       if (isPlayingLeagueMatch && userTeam) {
           opponent = leagueOpponent;
@@ -99,6 +101,13 @@ const App: React.FC = () => {
       }
       
       setCurrentScreen(ScreenState.HOME);
+  };
+
+  const handleCopaMatchRecord = async (opponent: string, result: 'win' | 'loss' | 'draw', gf: number, ga: number) => {
+      if (userTeam) {
+          const news = await generatePostMatchNews(userTeam.name, opponent, gf, ga);
+          setLatestNews(news);
+      }
   };
 
   const handleCopaWin = () => {
@@ -167,7 +176,12 @@ const App: React.FC = () => {
   }
   
   if (currentScreen === ScreenState.COPA_AMERICAS) {
-      return <CopaView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onWinTrophy={handleCopaWin} />;
+      return <CopaView 
+        team={userTeam} 
+        onBack={() => setCurrentScreen(ScreenState.HOME)} 
+        onWinTrophy={handleCopaWin} 
+        onMatchRecord={handleCopaMatchRecord}
+      />;
   }
 
   if (currentScreen === ScreenState.LEAGUE_TABLE) {

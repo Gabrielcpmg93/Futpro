@@ -9,6 +9,7 @@ interface CopaViewProps {
     team: Team;
     onBack: () => void;
     onWinTrophy: () => void;
+    onMatchRecord: (opponent: string, result: 'win' | 'loss' | 'draw', scoreUser: number, scoreOpponent: number) => void;
 }
 
 const GROUPS = {
@@ -18,7 +19,7 @@ const GROUPS = {
     E: ["Universidad de Chile", "Colo-Colo", "Bolívar", "San Antonio Bulo Bulo", "River Plate"] // Using last batch as E as requested
 };
 
-const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy }) => {
+const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy, onMatchRecord }) => {
     const [currentGroup, setCurrentGroup] = useState<'A' | 'B' | 'C' | 'E'>('A');
     const [matchIndex, setMatchIndex] = useState(0);
     const [inMatch, setInMatch] = useState(false);
@@ -32,8 +33,11 @@ const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy }) => {
     const currentOpponentReal = currentOpponentList[matchIndex];
     const currentOpponentFictional = getOpponentName(currentOpponentReal);
 
-    const handleMatchEnd = (result: 'win' | 'loss' | 'draw') => {
+    const handleMatchEnd = (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => {
         setInMatch(false);
+        // Report match result for news generation
+        onMatchRecord(currentOpponentFictional, result, userScore, opponentScore);
+
         if (result === 'win') {
             if (matchIndex < 4) {
                 setMatchIndex(matchIndex + 1);

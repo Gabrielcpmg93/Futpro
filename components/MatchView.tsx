@@ -6,7 +6,7 @@ import { Play, Activity, Zap, Shield } from 'lucide-react';
 
 interface MatchViewProps {
   team: Team;
-  onFinish: (result: 'win' | 'loss' | 'draw') => void;
+  onFinish: (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => void;
   opponentName?: string;
   opponentColor?: string;
   skipSetup?: boolean;
@@ -76,9 +76,9 @@ const MatchView: React.FC<MatchViewProps> = ({
   }, [skipSetup]);
 
   const handleFinish = () => {
-      if (score.user > score.opponent) onFinish('win');
-      else if (score.user < score.opponent) onFinish('loss');
-      else onFinish('draw');
+      if (score.user > score.opponent) onFinish('win', score.user, score.opponent);
+      else if (score.user < score.opponent) onFinish('loss', score.user, score.opponent);
+      else onFinish('draw', score.user, score.opponent);
   };
 
   if (viewState === 'MENU') {

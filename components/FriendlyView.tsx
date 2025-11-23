@@ -41,7 +41,7 @@ const FriendlyView: React.FC<FriendlyViewProps> = ({ onBack }) => {
         opponentName={selectedOpponent} 
         opponentColor="#3b82f6" // Give opponent a distinct color (Blue) for Friendlies
         skipSetup={true} // Auto start simulation
-        onFinish={(result) => {
+        onFinish={(result, scoreUser, scoreOpponent) => {
             alert(result === 'win' ? "Você venceu o amistoso!" : result === 'loss' ? "Derrota no amistoso." : "Empate.");
             setIsPlaying(false);
             onBack();

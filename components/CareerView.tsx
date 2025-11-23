@@ -82,7 +82,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
         setInCareerMatch(true);
     };
 
-    const handleMatchFinish = (result: 'win' | 'loss' | 'draw') => {
+    const handleMatchFinish = (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => {
         setInCareerMatch(false);
         const newGamesPlayed = gamesPlayed + 1;
         setGamesPlayed(newGamesPlayed);
