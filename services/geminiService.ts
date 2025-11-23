@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Team, Player, Position, SocialPost, LeagueTeam } from "../types";
+import { Team, Player, Position, SocialPost, LeagueTeam, NewsArticle } from "../types";
 
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
@@ -320,6 +320,67 @@ export const simulateMatchCommentary = async (userTeamName: string, opponentName
     return defaults;
   }
 }
+
+// --- NEWS GENERATION ---
+export const generatePostMatchNews = async (userTeam: string, opponent: string, userScore: number, opponentScore: number): Promise<NewsArticle> => {
+  const ai = getAiClient();
+  const result = userScore > opponentScore ? "win" : userScore < opponentScore ? "loss" : "draw";
+  
+  const today = new Date().toLocaleDateString('pt-BR');
+  const defaultArticle: NewsArticle = {
+      headline: `Resultado da Rodada: ${userTeam} ${userScore}x${opponentScore} ${opponent}`,
+      subheadline: "Partida movimentada agita a torcida neste fim de semana.",
+      content: `O confronto entre ${userTeam} e ${opponent} terminou com o placar de ${userScore} a ${opponentScore}. Foi um jogo disputado onde ambas as equipes buscaram o resultado. O técnico do ${userTeam} deve avaliar o desempenho para os próximos desafios.`,
+      date: today,
+      imageCaption: "Jogadores disputam a bola no meio de campo."
+  };
+
+  if (!ai) return defaultArticle;
+
+  try {
+      const response = await ai.models.generateContent({
+          model: MODEL_NAME,
+          contents: `
+              Write a short, sensationalist sports newspaper article (in Portuguese) about the match: ${userTeam} (${userScore}) vs ${opponent} (${opponentScore}).
+              Context: The user manages ${userTeam}. Result was a ${result}.
+              
+              Return JSON format with:
+              - headline: catchy title (max 8 words)
+              - subheadline: brief summary (max 15 words)
+              - content: The article body (approx 60 words). Be dramatic.
+              - imageCaption: Description of an imaginary photo of the match.
+          `,
+          config: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                  type: Type.OBJECT,
+                  properties: {
+                      headline: { type: Type.STRING },
+                      subheadline: { type: Type.STRING },
+                      content: { type: Type.STRING },
+                      imageCaption: { type: Type.STRING }
+                  }
+              }
+          }
+      });
+
+      const text = response.text;
+      if (!text) return defaultArticle;
+      
+      const data = JSON.parse(text);
+      return {
+          headline: data.headline,
+          subheadline: data.subheadline,
+          content: data.content,
+          date: today,
+          imageCaption: data.imageCaption
+      };
+
+  } catch (error: any) {
+      console.warn("Error generating news:", error);
+      return defaultArticle;
+  }
+};
 
 const mockTeamGeneration = (realName: string, fictionalName?: string): Team => {
   const name = fictionalName || `Nova ${realName}`;

@@ -66,6 +66,14 @@ export interface LeagueTeam {
   isUser: boolean;
 }
 
+export interface NewsArticle {
+  headline: string;
+  subheadline: string;
+  content: string;
+  date: string;
+  imageCaption: string;
+}
+
 export enum ScreenState {
   SELECT_TEAM = 'SELECT_TEAM',
   HOME = 'HOME',
@@ -79,4 +87,5 @@ export enum ScreenState {
   LOADING = 'LOADING',
   PLAY_HUB = 'PLAY_HUB',
   LEAGUE_TABLE = 'LEAGUE_TABLE',
+  NEWS = 'NEWS',
 }

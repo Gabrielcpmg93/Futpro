@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
@@ -95,25 +95,31 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
             <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">+1</span>
          </div>
       </button>
-
-      {/* League Table Button - NEW */}
-      <button 
-        onClick={() => onNavigate(ScreenState.LEAGUE_TABLE)}
-        className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group active:scale-95 transition-all hover:bg-slate-50"
-      >
-         <div className="flex items-center gap-3">
-            <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+      
+      {/* Row for Table and News */}
+      <div className="grid grid-cols-2 gap-3">
+          {/* League Table Button */}
+          <button 
+            onClick={() => onNavigate(ScreenState.LEAGUE_TABLE)}
+            className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:bg-slate-50"
+          >
+            <div className="bg-emerald-100 p-2.5 rounded-xl text-emerald-600">
                 <List size={20} />
             </div>
-            <div className="text-left">
-                <p className="text-sm font-bold text-slate-800">Tabela Brasileirão</p>
-                <p className="text-xs text-slate-400">Ver classificação e jogar temporada</p>
+            <p className="text-sm font-bold text-slate-800">Tabela</p>
+          </button>
+
+          {/* News Button - NEW */}
+          <button 
+            onClick={() => onNavigate(ScreenState.NEWS)}
+            className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:bg-slate-50"
+          >
+            <div className="bg-slate-100 p-2.5 rounded-xl text-slate-600">
+                <Newspaper size={20} />
             </div>
-         </div>
-         <div className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-            <ArrowRight size={14} className="text-slate-400 group-hover:text-emerald-600"/>
-         </div>
-      </button>
+            <p className="text-sm font-bold text-slate-800">Notícias</p>
+          </button>
+      </div>
 
       {/* Trophy Room Section */}
       {team.trophies.length > 0 ? (

@@ -12,8 +12,9 @@ import CareerView from './components/CareerView';
 import FriendlyView from './components/FriendlyView';
 import PlayHub from './components/PlayHub';
 import LeagueView from './components/LeagueView';
-import { Team, ScreenState, LeagueTeam } from './types';
-import { generateLeagueTable, updateLeagueTable } from './services/geminiService';
+import NewsView from './components/NewsView';
+import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
+import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
 const App: React.FC = () => {
   const [userTeam, setUserTeam] = useState<Team | null>(null);
@@ -26,6 +27,15 @@ const App: React.FC = () => {
   const [isPlayingLeagueMatch, setIsPlayingLeagueMatch] = useState(false);
   const [leagueOpponent, setLeagueOpponent] = useState<string>("");
 
+  // News State
+  const [latestNews, setLatestNews] = useState<NewsArticle>({
+      headline: "Temporada Começa com Grande Expectativa!",
+      subheadline: "Times se reforçam para o campeonato mais disputado do ano.",
+      content: "A torcida está ansiosa para ver os novos reforços em campo. O mercado da bola esteve agitado e promessas de títulos foram feitas por diversos dirigentes. Quem levantará a taça este ano?",
+      date: new Date().toLocaleDateString('pt-BR'),
+      imageCaption: "Estádio lotado para a abertura da temporada."
+  });
+
   const handleTeamSelect = (team: Team) => {
     setUserTeam(team);
     // Initialize league when team is created
@@ -37,17 +47,18 @@ const App: React.FC = () => {
     setUserTeam(team);
   };
 
-  const handleMatchFinish = (result: 'win' | 'loss' | 'draw') => {
-      // League Match Logic
-      if (isPlayingLeagueMatch && userTeam) {
-          // Calculate GF/GA based on simple result for now (can be more complex if MatchView returns score)
-          // MatchView currently returns just win/loss/draw. We will estimate goals.
-          let gf = 0;
-          let ga = 0;
-          if (result === 'win') { gf = 2; ga = 1; }
-          else if (result === 'loss') { gf = 0; ga = 2; }
-          else { gf = 1; ga = 1; }
+  const handleMatchFinish = async (result: 'win' | 'loss' | 'draw') => {
+      let opponent = "Adversário";
+      let gf = 0;
+      let ga = 0;
 
+      // Determine score and opponent based on match type
+      if (result === 'win') { gf = 2; ga = 1; }
+      else if (result === 'loss') { gf = 0; ga = 2; }
+      else { gf = 1; ga = 1; }
+
+      if (isPlayingLeagueMatch && userTeam) {
+          opponent = leagueOpponent;
           const newTable = updateLeagueTable(leagueTable, result, gf, ga);
           setLeagueTable(newTable);
           
@@ -57,10 +68,8 @@ const App: React.FC = () => {
 
           // Check Trophy (After last round)
           if (currentRound === TOTAL_LEAGUE_ROUNDS) {
-              // Find winner
               const winner = newTable[0];
               if (winner.isUser) {
-                   // Award Trophy
                    if (!userTeam.trophies.includes("Troféu Brasileirão")) {
                        setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Troféu Brasileirão"] });
                        alert("🏆 É CAMPEÃO! Você venceu o Brasileirão Fictício!");
@@ -68,15 +77,25 @@ const App: React.FC = () => {
               }
           }
           
-          // Navigate to table to show points update, then user can go back
+          // Generate News
+          const news = await generatePostMatchNews(userTeam.name, opponent, gf, ga);
+          setLatestNews(news);
+
           setCurrentScreen(ScreenState.LEAGUE_TABLE);
           return;
       }
 
-      // Simple match result logic for quick match/friendly
-      if (result === 'win' && userTeam) {
-          setUserTeam({ ...userTeam, budget: userTeam.budget + 100000 }); // Win bonus
+      // Friendly logic
+      if (userTeam) {
+          if (result === 'win') {
+             setUserTeam({ ...userTeam, budget: userTeam.budget + 100000 }); // Win bonus
+          }
+          // For friendlies, we can still generate news, but maybe less critical
+          // Assuming the opponent name was set elsewhere or generic
+          const news = await generatePostMatchNews(userTeam.name, "Time Fictício", gf, ga);
+          setLatestNews(news);
       }
+      
       setCurrentScreen(ScreenState.HOME);
   };
 
@@ -158,6 +177,10 @@ const App: React.FC = () => {
             onBack={() => setCurrentScreen(ScreenState.HOME)}
           />
       )
+  }
+
+  if (currentScreen === ScreenState.NEWS) {
+      return <NewsView news={latestNews} onBack={() => setCurrentScreen(ScreenState.HOME)} />
   }
 
   return (
