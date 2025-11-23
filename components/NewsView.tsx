@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { NewsArticle } from '../types';
-import { ArrowLeft, Share2, Printer, Camera } from 'lucide-react';
+import { ArrowLeft, Share2, Printer } from 'lucide-react';
 
 interface NewsViewProps {
   news: NewsArticle | null;
@@ -40,17 +41,6 @@ const NewsView: React.FC<NewsViewProps> = ({ news, onBack }) => {
                 <p className="text-lg text-slate-600 font-medium italic mb-4 leading-snug border-l-4 border-red-600 pl-3">
                     {news.subheadline}
                 </p>
-
-                {/* Image Placeholder */}
-                <div className="w-full h-48 bg-slate-200 mb-4 relative overflow-hidden grayscale contrast-125 border-2 border-black">
-                     <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                        <Camera size={48} />
-                     </div>
-                     <div className="absolute bottom-0 left-0 bg-black text-white text-[10px] px-2 py-1 uppercase font-bold">
-                        Foto: Arquivo
-                     </div>
-                </div>
-                <p className="text-[10px] text-slate-500 mb-4 italic text-right">{news.imageCaption}</p>
 
                 <div className="columns-1 text-justify text-sm font-serif leading-relaxed">
                     <span className="float-left text-4xl font-black mr-2 mt-[-6px] font-sans">O</span>
