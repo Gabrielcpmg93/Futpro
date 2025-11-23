@@ -15,6 +15,7 @@ import LeagueView from './components/LeagueView';
 import NewsView from './components/NewsView';
 import YouthAcademyView from './components/YouthAcademyView';
 import CalendarView from './components/CalendarView';
+import CityBuilderView from './components/CityBuilderView';
 import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
@@ -209,6 +210,12 @@ const App: React.FC = () => {
         onBack={() => setCurrentScreen(ScreenState.HOME)} 
         onScheduleFriendly={() => setCurrentScreen(ScreenState.FRIENDLY_SETUP)}
       />
+    );
+  }
+
+  if (currentScreen === ScreenState.CITY_BUILDER) {
+    return (
+      <CityBuilderView onBack={() => setCurrentScreen(ScreenState.HOME)} />
     );
   }
 
