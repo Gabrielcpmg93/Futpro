@@ -10,6 +10,7 @@ interface MatchViewProps {
   opponentName?: string;
   opponentColor?: string;
   skipSetup?: boolean;
+  forcedResult?: 'win' | 'loss' | 'draw'; // New prop to force outcome
 }
 
 interface FieldPlayer {
@@ -27,7 +28,8 @@ const MatchView: React.FC<MatchViewProps> = ({
   onFinish, 
   opponentName = "Dragões do Sul",
   opponentColor = "#dc2626",
-  skipSetup = false
+  skipSetup = false,
+  forcedResult
 }) => {
   const [viewState, setViewState] = useState<'MENU' | 'PLAYING' | 'FINISHED'>(skipSetup ? 'PLAYING' : 'MENU');
   const [score, setScore] = useState({ user: 0, opponent: 0 });
@@ -126,9 +128,25 @@ const MatchView: React.FC<MatchViewProps> = ({
     initPlayers();
     
     // Simulation Logic
-    const tacticBonus = tactic === 'attack' ? 1 : 0;
-    const userGoals = Math.floor(Math.random() * 3) + tacticBonus + (Math.random() > 0.5 ? 1 : 0);
-    const oppGoals = Math.floor(Math.random() * 3);
+    let userGoals = 0;
+    let oppGoals = 0;
+
+    // Apply forced result if provided, otherwise use random logic
+    if (forcedResult === 'win') {
+        userGoals = Math.floor(Math.random() * 2) + 2; // 2 or 3 goals
+        oppGoals = Math.floor(Math.random() * (userGoals - 1)); // Always strictly less
+    } else if (forcedResult === 'loss') {
+        oppGoals = Math.floor(Math.random() * 2) + 2; // 2 or 3 goals
+        userGoals = Math.floor(Math.random() * (oppGoals - 1)); // Always strictly less
+    } else if (forcedResult === 'draw') {
+        userGoals = Math.floor(Math.random() * 3);
+        oppGoals = userGoals;
+    } else {
+        // Standard Logic
+        const tacticBonus = tactic === 'attack' ? 1 : 0;
+        userGoals = Math.floor(Math.random() * 3) + tacticBonus + (Math.random() > 0.5 ? 1 : 0);
+        oppGoals = Math.floor(Math.random() * 3);
+    }
     
     const lines = await simulateMatchCommentary(team.name, opponentName);
     setCommentaryLines(lines);

@@ -23,6 +23,7 @@ const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy, onMatchR
     const [currentGroup, setCurrentGroup] = useState<'A' | 'B' | 'C' | 'E'>('A');
     const [matchIndex, setMatchIndex] = useState(0);
     const [inMatch, setInMatch] = useState(false);
+    const [matchesPlayedSession, setMatchesPlayedSession] = useState(0);
 
     // Helper to get mapped name
     const getOpponentName = (realName: string) => {
@@ -33,8 +34,17 @@ const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy, onMatchR
     const currentOpponentReal = currentOpponentList[matchIndex];
     const currentOpponentFictional = getOpponentName(currentOpponentReal);
 
+    // Logic: Win 2, Lose 1, Repeat.
+    // 0 -> Win
+    // 1 -> Win
+    // 2 -> Loss
+    const patternIndex = matchesPlayedSession % 3;
+    const forcedResult = patternIndex === 2 ? 'loss' : 'win';
+
     const handleMatchEnd = (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => {
         setInMatch(false);
+        setMatchesPlayedSession(prev => prev + 1);
+        
         // Report match result for news generation
         onMatchRecord(currentOpponentFictional, result, userScore, opponentScore);
 
@@ -54,12 +64,19 @@ const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy, onMatchR
                 }
             }
         } else {
-            alert("Você não venceu! Tente novamente contra " + currentOpponentFictional);
+            alert(`Você não venceu! Tente novamente contra ${currentOpponentFictional}. (Resultado forçado: ${userScore}x${opponentScore})`);
         }
     };
 
     if (inMatch) {
-        return <MatchView team={team} onFinish={handleMatchEnd} opponentName={currentOpponentFictional} />;
+        return (
+            <MatchView 
+                team={team} 
+                onFinish={handleMatchEnd} 
+                opponentName={currentOpponentFictional} 
+                forcedResult={forcedResult}
+            />
+        );
     }
 
     return (
