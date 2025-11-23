@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar as CalendarIcon, Plus } from 'lucide-react';
 
 interface CalendarViewProps {
@@ -8,33 +8,67 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ onBack, onScheduleFriendly }) => {
-  const [selectedDay, setSelectedDay] = useState<number>(22); // Default selected based on image
+  // Get current system date
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-indexed (0 = Jan, 11 = Dec)
+  const currentDay = now.getDate();
 
-  // Mock data to match the visual reference (November)
-  // Days from previous month: 26, 27, 28, 29, 30, 31
-  // Days in current month: 1-30
-  // Days in next month: 1-6
+  const [selectedDay, setSelectedDay] = useState<number>(currentDay);
+
+  const monthNamesShort = [
+      "JAN.", "FEV.", "MAR.", "ABR.", "MAI.", "JUN.",
+      "JUL.", "AGO.", "SET.", "OUT.", "NOV.", "DEZ."
+  ];
+  
+  const monthNamesFull = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+
   const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-  // Events on specific days (Green underlines)
-  const eventDays = [2, 15, 20];
+  // Calendar Logic
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+
+  const daysInCurrentMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayIndex = getFirstDayOfMonth(currentYear, currentMonth);
+  
+  const daysInPrevMonth = getDaysInMonth(currentYear, currentMonth - 1);
+  const prevMonthDaysToShow = firstDayIndex;
+
+  // Mock event days (randomized for visual effect in this demo)
+  // In a real app, this would check against a database of matches
+  const [eventDays] = useState(() => {
+      const events = [];
+      // Create fake events on random days to look good
+      // Ensure we don't error if daysInCurrentMonth is small
+      if (daysInCurrentMonth > 5) {
+         events.push(Math.min(daysInCurrentMonth, 5));
+         events.push(Math.min(daysInCurrentMonth, 15));
+         events.push(Math.min(daysInCurrentMonth, 25));
+      }
+      return events;
+  });
 
   const renderCalendarGrid = () => {
     const days = [];
     
-    // Previous month (Oct) - faded
-    const prevMonthDays = [26, 27, 28, 29, 30, 31];
-    prevMonthDays.forEach(d => {
-      days.push(
-        <div key={`prev-${d}`} className="h-14 flex items-center justify-center text-slate-300 font-medium">
-          {d}
-        </div>
-      );
-    });
+    // Previous month days (faded)
+    for (let i = prevMonthDaysToShow - 1; i >= 0; i--) {
+        const dayNum = daysInPrevMonth - i;
+        days.push(
+            <div key={`prev-${dayNum}`} className="h-14 flex items-center justify-center text-slate-300 font-medium">
+                {dayNum}
+            </div>
+        );
+    }
 
-    // Current month (Nov)
-    for (let i = 1; i <= 30; i++) {
+    // Current month days
+    for (let i = 1; i <= daysInCurrentMonth; i++) {
         const isSelected = selectedDay === i;
+        const isToday = i === currentDay;
         const hasEvent = eventDays.includes(i);
 
         days.push(
@@ -45,6 +79,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onBack, onScheduleFriendly 
             >
                 <div className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all
                     ${isSelected ? 'bg-black text-white shadow-lg scale-110' : 'text-slate-800 hover:bg-slate-50'}
+                    ${!isSelected && isToday ? 'border border-emerald-500 text-emerald-600' : ''}
                 `}>
                     {i}
                 </div>
@@ -55,15 +90,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onBack, onScheduleFriendly 
         );
     }
 
-    // Next month (Dec) - faded
-    const nextMonthDays = [1, 2, 3, 4, 5, 6];
-    nextMonthDays.forEach(d => {
+    // Next month days to fill the grid rows (display up to 42 cells max to cover 6 weeks)
+    const totalCellsSoFar = prevMonthDaysToShow + daysInCurrentMonth;
+    const cellsToFill = 42 - totalCellsSoFar; // Fill remaining grid
+
+    for (let i = 1; i <= cellsToFill; i++) {
         days.push(
-          <div key={`next-${d}`} className="h-14 flex items-center justify-center text-slate-300 font-medium">
-            {d}
+          <div key={`next-${i}`} className="h-14 flex items-center justify-center text-slate-300 font-medium">
+            {i}
           </div>
         );
-      });
+    }
 
     return days;
   };
@@ -75,7 +112,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onBack, onScheduleFriendly 
         <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
              <ArrowLeft size={24} className="text-slate-800" />
         </button>
-        <h1 className="text-xl font-bold text-slate-900 tracking-widest uppercase">NOV.</h1>
+        <h1 className="text-xl font-bold text-slate-900 tracking-widest uppercase">
+            {monthNamesShort[currentMonth]} <span className="text-slate-400 ml-1">{currentYear}</span>
+        </h1>
         <div className="w-10"></div> {/* Spacer for alignment */}
       </div>
 
@@ -98,7 +137,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onBack, onScheduleFriendly 
           <div className="flex items-center justify-between mb-6">
               <div>
                   <h2 className="text-2xl font-bold text-slate-900">Dia {selectedDay}</h2>
-                  <p className="text-slate-400">Novembro, 2024</p>
+                  <p className="text-slate-400">{monthNamesFull[currentMonth]}, {currentYear}</p>
               </div>
               <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                   <CalendarIcon className="text-slate-400" />
