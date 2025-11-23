@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Team, ScreenState } from '../types';
-import { Play, Trophy, Users, Shield } from 'lucide-react';
+import { Play, Trophy, Users, Shield, Calendar, ArrowRight } from 'lucide-react';
 
 interface PlayHubProps {
   team: Team;
@@ -34,20 +34,20 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, 
             </div>
         </button>
 
-        {/* Friendly Match Card */}
+        {/* Friendly Match Card Redirects to Calendar */}
         <button 
-            onClick={() => onNavigate(ScreenState.FRIENDLY_SETUP)}
+            onClick={() => onNavigate(ScreenState.CALENDAR)}
             className="w-full bg-white text-slate-900 p-6 rounded-3xl border border-slate-200 shadow-lg group transition-transform active:scale-95 text-left relative overflow-hidden"
         >
             <div className="absolute bottom-0 right-0 w-24 h-24 bg-blue-100 rounded-full filter blur-2xl opacity-50 -mr-5 -mb-5"></div>
             <div className="relative z-10 flex flex-col items-start">
                 <div className="bg-blue-50 p-3 rounded-xl mb-4 text-blue-600">
-                    <Users size={32} />
+                    <Calendar size={32} />
                 </div>
-                <h2 className="text-2xl font-bold mb-1">Amistoso Fictício</h2>
-                <p className="text-slate-500 text-sm mb-4">Escolha seu time fictício e jogue contra outro time fictício do Brasileirão Série A.</p>
+                <h2 className="text-2xl font-bold mb-1">Agendar Amistoso</h2>
+                <p className="text-slate-500 text-sm mb-4">Acesse o calendário para marcar jogos amistosos.</p>
                 <div className="flex items-center gap-2 text-blue-600 text-sm font-bold uppercase tracking-wide">
-                    Configurar Partida <Play size={16} fill="currentColor" />
+                    Ir para Calendário <ArrowRight size={16} />
                 </div>
             </div>
         </button>
