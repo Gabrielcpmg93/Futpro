@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
@@ -74,7 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
           </button>
       </div>
 
-      {/* Modo Carreira (Previously Rumo ao Estrelato) */}
+      {/* Career Mode (Rumo ao Estrelato) */}
       <button 
         onClick={() => onNavigate(ScreenState.CAREER_MODE)}
         className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white p-5 rounded-2xl shadow-lg shadow-purple-500/20 relative overflow-hidden group active:scale-95 transition-transform"
@@ -86,7 +86,7 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
                      <Star size={24} fill="currentColor" className="text-yellow-300" />
                  </div>
                  <div className="text-left">
-                     <h2 className="font-bold text-lg leading-tight">Modo Carreira</h2>
+                     <h2 className="font-bold text-lg leading-tight">Rumo ao Estrelato</h2>
                      <p className="text-purple-200 text-xs">Crie seu jogador e vire lenda</p>
                  </div>
              </div>
@@ -110,6 +110,23 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
          </div>
          <div className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
             <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">+1</span>
+         </div>
+      </button>
+
+      {/* Press Conference (Imprensa) Button - NEW */}
+      <button 
+        onClick={() => onNavigate(ScreenState.PRESS_CONFERENCE)}
+        className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 group active:scale-95 transition-all hover:bg-slate-50"
+      >
+         <div className="bg-rose-100 p-2 rounded-xl text-rose-600">
+            <Mic size={20} />
+         </div>
+         <div className="text-left">
+            <p className="text-sm font-bold text-slate-800">Imprensa</p>
+            <p className="text-xs text-slate-400">Coletivas e anúncios oficiais</p>
+         </div>
+         <div className="ml-auto bg-slate-50 p-2 rounded-full">
+            <ArrowRight size={16} className="text-slate-300 group-hover:text-rose-600" />
          </div>
       </button>
 

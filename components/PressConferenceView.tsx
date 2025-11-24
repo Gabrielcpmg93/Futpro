@@ -1,0 +1,146 @@
+
+import React from 'react';
+import { Team } from '../types';
+import { ArrowLeft, Mic, Camera } from 'lucide-react';
+
+interface PressConferenceViewProps {
+  team: Team;
+  onBack: () => void;
+}
+
+const PressConferenceView: React.FC<PressConferenceViewProps> = ({ team, onBack }) => {
+  // Extract initials or a short name for the logo pattern
+  const teamInitials = team.name.substring(0, 3).toUpperCase();
+
+  return (
+    <div className="min-h-screen bg-slate-900 flex flex-col relative overflow-hidden">
+      {/* Navigation Header */}
+      <div className="absolute top-0 left-0 w-full p-4 z-50 flex items-center justify-between">
+        <button 
+            onClick={onBack}
+            className="bg-black/30 text-white p-2 rounded-full backdrop-blur-sm hover:bg-black/50 transition-colors"
+        >
+            <ArrowLeft size={24} />
+        </button>
+        <div className="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase animate-pulse flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+            Ao Vivo
+        </div>
+      </div>
+
+      {/* THE ROOM (CSS 3D Scene) */}
+      <div className="flex-1 relative flex items-end justify-center perspective-[1000px] overflow-hidden">
+          
+          {/* Back Wall (The Backdrop) */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ backgroundColor: team.primaryColor }}
+          >
+              {/* Logo Pattern */}
+              <div className="w-full h-full opacity-20 grid grid-cols-6 gap-8 p-8 content-center justify-items-center" 
+                   style={{ transform: 'scale(1.2)' }}>
+                  {Array.from({ length: 48 }).map((_, i) => (
+                      <div key={i} className="font-black text-white text-xl tracking-tighter rotate-[-15deg] select-none">
+                          {teamInitials}
+                      </div>
+                  ))}
+              </div>
+
+              {/* Central Main Logo/Text */}
+              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10 w-full px-4">
+                  <h1 className="text-white font-black text-4xl uppercase tracking-wide drop-shadow-lg mb-2 leading-tight">
+                      {team.name}
+                  </h1>
+                  <div className="flex justify-center gap-4 opacity-80">
+                      {/* Fake Sponsors */}
+                      <div className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded">SPONSOR</div>
+                      <div className="bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded">BET</div>
+                      <div className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded">BANK</div>
+                  </div>
+              </div>
+          </div>
+
+          {/* Floor */}
+          <div className="absolute bottom-0 w-full h-1/3 bg-[#8b5a2b] origin-bottom" 
+               style={{ 
+                   transform: 'rotateX(45deg) scale(2)',
+                   backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0))'
+               }}>
+          </div>
+
+          {/* The Desk */}
+          <div className="relative w-full max-w-lg h-40 z-20 -mb-10">
+              {/* Desk Front Panel */}
+              <div 
+                className="absolute bottom-0 left-0 w-full h-full flex items-center justify-center shadow-2xl"
+                style={{ backgroundColor: team.primaryColor }}
+              >
+                  <div className="border-t-4 border-white/20 w-full h-full flex items-center justify-center relative overflow-hidden">
+                        {/* Desk Logo */}
+                        <div className="w-24 h-24 rounded-full border-4 border-white/50 flex items-center justify-center bg-white/10 text-white font-black text-2xl shadow-inner">
+                            {team.name.substring(0,1)}
+                        </div>
+                        
+                        {/* Side text */}
+                        <div className="absolute right-4 bottom-16 text-white/30 text-[10px] font-bold w-16 leading-tight text-right">
+                            ONTEM<br/>HOJE E<br/>SEMPRE
+                        </div>
+                  </div>
+              </div>
+
+              {/* Desk Top (Wood) */}
+              <div className="absolute top-0 left-0 w-full h-12 bg-[#5d4037] origin-bottom skew-x-12 shadow-lg" style={{ transform: 'translateY(-100%) rotateX(60deg)' }}></div>
+
+              {/* Microphones */}
+              <div className="absolute -top-16 left-1/4 w-2 h-16 bg-gray-800 rotate-12 origin-bottom">
+                  <div className="absolute -top-2 -left-1 w-4 h-6 bg-black rounded-md flex items-center justify-center">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+              </div>
+              <div className="absolute -top-14 left-1/3 w-2 h-14 bg-gray-800 -rotate-6 origin-bottom">
+                   <div className="absolute -top-2 -left-1 w-4 h-6 bg-gray-900 rounded-md border-t-2 border-red-500"></div>
+              </div>
+              <div className="absolute -top-16 right-1/3 w-2 h-16 bg-gray-800 rotate-6 origin-bottom">
+                   <div className="absolute -top-2 -left-1 w-4 h-6 bg-black rounded-md flex items-center justify-center">
+                       <span className="text-[4px] text-white font-bold">TV</span>
+                   </div>
+              </div>
+              <div className="absolute -top-12 right-1/4 w-2 h-12 bg-gray-800 -rotate-12 origin-bottom">
+                   <div className="absolute -top-2 -left-1 w-4 h-6 bg-gray-900 rounded-md"></div>
+              </div>
+
+              {/* Water Bottles */}
+              <div className="absolute -top-4 left-10 w-3 h-8 bg-blue-200/50 rounded-sm border border-white/30"></div>
+              <div className="absolute -top-4 right-20 w-3 h-8 bg-blue-200/50 rounded-sm border border-white/30"></div>
+              
+              {/* Tablet/Papers */}
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-10 bg-white transform rotate-x-60 skew-x-12 shadow-sm flex items-center justify-center">
+                  <div className="w-12 h-1 bg-black/20"></div>
+              </div>
+          </div>
+
+          {/* Flash Effects */}
+          <div className="absolute inset-0 pointer-events-none animate-pulse bg-white/5 z-30 mix-blend-overlay"></div>
+      </div>
+
+      {/* Interactive Area */}
+      <div className="bg-slate-800 p-6 pb-10 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          <h2 className="text-white font-bold mb-2 flex items-center gap-2">
+              <Mic size={18} className="text-rose-500" /> Coletiva de Imprensa
+          </h2>
+          <p className="text-slate-400 text-sm mb-4">Nenhuma declaração oficial pendente no momento.</p>
+          
+          <div className="grid grid-cols-2 gap-3 opacity-50 pointer-events-none">
+              <button className="bg-slate-700 text-white p-3 rounded-xl text-xs font-bold text-center">
+                  Elogiar Elenco
+              </button>
+              <button className="bg-slate-700 text-white p-3 rounded-xl text-xs font-bold text-center">
+                  Criticar Arbitragem
+              </button>
+          </div>
+      </div>
+    </div>
+  );
+};
+
+export default PressConferenceView;

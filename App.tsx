@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import TeamSelector from './components/TeamSelector';
 import Layout from './components/Layout';
@@ -16,6 +17,7 @@ import NewsView from './components/NewsView';
 import YouthAcademyView from './components/YouthAcademyView';
 import CalendarView from './components/CalendarView';
 import CityBuilderView from './components/CityBuilderView';
+import PressConferenceView from './components/PressConferenceView';
 import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
@@ -201,6 +203,10 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.CITY_BUILDER && (
           <CityBuilderView onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+
+      {currentScreen === ScreenState.PRESS_CONFERENCE && (
+          <PressConferenceView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
       )}
     </Layout>
   );
