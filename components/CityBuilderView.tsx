@@ -195,7 +195,7 @@ const CityGrid = memo(({ grid, onTileClick }: { grid: TileType[][], onTileClick:
 const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
   const [grid, setGrid] = useState<TileType[][]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [selectedTool, setSelectedTool] = useState<TileType | 'bulldoze' | 'add-car' | 'add-pedestrian'>('road');
+  const [selectedTool, setSelectedTool] = useState<TileType | 'bulldoze' | 'add-car'>('road');
   
   // Zoom State
   const [zoom, setZoom] = useState(1.0);
@@ -418,24 +418,6 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
         return;
     }
 
-    if (selectedTool === 'add-pedestrian') {
-         if (currentGrid[rowIndex][colIndex] !== 'road') {
-            alert("Pedestres devem ser colocados na calçada!");
-            return;
-        }
-        const newPed: Entity = {
-            id: Date.now(),
-            type: 'pedestrian',
-            r: rowIndex,
-            c: colIndex,
-            dir: 'DOWN',
-            color: ['#f87171', '#60a5fa', '#a78bfa', '#fbbf24', '#34d399'][Math.floor(Math.random()*5)],
-            sideWalkSide: Math.floor(Math.random() * 4) // 0=Top, 1=Right, 2=Bottom, 3=Left
-        };
-        setEntities(prev => [...prev, newPed]);
-        return;
-    }
-
     // Modify Grid
     setGrid(prevGrid => {
         const newGrid = prevGrid.map(row => [...row]);
@@ -539,6 +521,10 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
       });
   };
 
+  // Population Calculation based on Houses (4 people per house)
+  const totalHouses = grid.reduce((acc, row) => acc + row.filter(t => t === 'house').length, 0);
+  const population = totalHouses * 4;
+
   return (
     <div className="min-h-screen bg-sky-100 flex flex-col h-screen overflow-hidden">
       {/* Header */}
@@ -556,7 +542,7 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">População</span>
              <span className="text-sm font-bold text-emerald-600 flex items-center gap-3">
                  <div className="flex items-center gap-1"><CarFront size={14}/> {entities.filter(e => e.type === 'car').length}</div>
-                 <div className="flex items-center gap-1"><User size={14}/> {entities.filter(e => e.type === 'pedestrian').length}</div>
+                 <div className="flex items-center gap-1"><User size={14}/> {population}</div>
              </span>
           </div>
       </div>
@@ -659,14 +645,6 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
               >
                   <Car size={20} />
                   <span className="text-[10px] font-bold">Carro</span>
-              </button>
-
-              <button 
-                onClick={() => setSelectedTool('add-pedestrian')}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-b-4 transition-all active:scale-95 min-w-[4rem] ${selectedTool === 'add-pedestrian' ? 'border-teal-600 bg-teal-600 text-white shadow-lg transform -translate-y-1' : 'border-teal-200 bg-teal-50 text-teal-500 hover:bg-teal-100'}`}
-              >
-                  <User size={20} />
-                  <span className="text-[10px] font-bold">Pessoa</span>
               </button>
 
               <div className="w-[1px] bg-slate-200 mx-1"></div>
