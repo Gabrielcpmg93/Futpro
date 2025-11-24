@@ -32,6 +32,14 @@ const App: React.FC = () => {
   const [isPlayingLeagueMatch, setIsPlayingLeagueMatch] = useState(false);
   const [leagueOpponent, setLeagueOpponent] = useState<string>("");
 
+  // Match History State for Press Conference
+  const [lastMatchData, setLastMatchData] = useState<{
+      opponent: string;
+      result: 'win' | 'loss' | 'draw';
+      scoreUser: number;
+      scoreOpponent: number;
+  } | null>(null);
+
   // News State
   const [latestNews, setLatestNews] = useState<NewsArticle>({
       headline: "Temporada Começa com Grande Expectativa!",
@@ -75,13 +83,23 @@ const App: React.FC = () => {
   };
 
   const handleMatchFinish = (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => {
+      const opponentName = leagueOpponent || "Adversário";
+      
+      // Save result for Press Conference
+      setLastMatchData({
+          opponent: opponentName,
+          result: result,
+          scoreUser: userScore,
+          scoreOpponent: opponentScore
+      });
+
       if (isPlayingLeagueMatch && userTeam) {
           // Update Table
           const newTable = updateLeagueTable(leagueTable, result, userScore, opponentScore);
           setLeagueTable(newTable);
           
           // Generate News
-          generatePostMatchNews(userTeam.name, leagueOpponent, userScore, opponentScore).then(news => setLatestNews(news));
+          generatePostMatchNews(userTeam.name, opponentName, userScore, opponentScore).then(news => setLatestNews(news));
 
           // Increment Round
           if (currentRound < TOTAL_LEAGUE_ROUNDS) {
@@ -171,6 +189,13 @@ const App: React.FC = () => {
             onMatchRecord={(opp, res, us, os) => {
                 // Optional: update news for Copa
                 generatePostMatchNews(userTeam.name, opp, us, os).then(news => setLatestNews(news));
+                // Also set match data for press conference
+                setLastMatchData({
+                    opponent: opp,
+                    result: res,
+                    scoreUser: us,
+                    scoreOpponent: os
+                });
             }}
           />
       )}
@@ -206,7 +231,11 @@ const App: React.FC = () => {
       )}
 
       {currentScreen === ScreenState.PRESS_CONFERENCE && (
-          <PressConferenceView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+          <PressConferenceView 
+            team={userTeam} 
+            lastMatchData={lastMatchData}
+            onBack={() => setCurrentScreen(ScreenState.HOME)} 
+          />
       )}
     </Layout>
   );
