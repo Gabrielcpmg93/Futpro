@@ -32,9 +32,6 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
       budget: newBudget,
       roster: newRoster
     });
-
-    // Visual feedback (optional, but good for UX)
-    // We rely on the UI updating immediately
   };
 
   return (
@@ -77,6 +74,26 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
           </button>
       </div>
 
+      {/* Modo Carreira (Previously Rumo ao Estrelato) */}
+      <button 
+        onClick={() => onNavigate(ScreenState.CAREER_MODE)}
+        className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white p-5 rounded-2xl shadow-lg shadow-purple-500/20 relative overflow-hidden group active:scale-95 transition-transform"
+      >
+         <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+         <div className="relative z-10 flex items-center justify-between">
+             <div className="flex items-center gap-4">
+                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                     <Star size={24} fill="currentColor" className="text-yellow-300" />
+                 </div>
+                 <div className="text-left">
+                     <h2 className="font-bold text-lg leading-tight">Modo Carreira</h2>
+                     <p className="text-purple-200 text-xs">Crie seu jogador e vire lenda</p>
+                 </div>
+             </div>
+             <ArrowRight size={20} className="text-purple-200" />
+         </div>
+      </button>
+
       {/* Skip Week Button */}
       <button 
         onClick={handleSkipWeek}
@@ -113,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
          </div>
       </button>
 
-      {/* City Builder (Mayor) Button - NEW */}
+      {/* City Builder (Mayor) Button */}
       <button 
         onClick={() => onNavigate(ScreenState.CITY_BUILDER)}
         className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 group active:scale-95 transition-all hover:bg-slate-50"
@@ -213,27 +230,6 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
             <p className="text-amber-200/80 text-xs font-medium mb-1 uppercase tracking-wide">Torneio Continental</p>
             <h2 className="text-white text-xl font-bold leading-tight">Copa das Américas</h2>
             <p className="text-amber-200/60 text-xs mt-1">Grupos A, B, C, E</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Career Mode */}
-      <div 
-        onClick={() => onNavigate(ScreenState.CAREER_MODE)}
-        className="w-full rounded-3xl p-6 relative overflow-hidden shadow-xl cursor-pointer"
-        style={{ background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)' }}
-      >
-         <div className="absolute bottom-0 right-0 p-4 opacity-10 rotate-12">
-          <Star size={100} />
-        </div>
-        <div className="relative z-10 flex flex-col h-full justify-between min-h-[120px]">
-          <div className="w-10 h-10 bg-violet-800/50 backdrop-blur-sm rounded-xl flex items-center justify-center text-yellow-300 mb-4">
-            <Star size={20} fill="currentColor" />
-          </div>
-          <div>
-            <p className="text-violet-200 text-xs font-medium mb-1 uppercase tracking-wide">Modo Carreira</p>
-            <h2 className="text-white text-2xl font-bold">Rumo ao Estrelato</h2>
-            <p className="text-violet-300 text-xs mt-1">Temporada de 90 Jogos</p>
           </div>
         </div>
       </div>
