@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Team, Position } from '../types';
 import { SERIE_A_MAPPING } from '../services/geminiService';
-import { Star, User, ArrowRight, MapPin, Calendar, Trophy, Activity, Play, CheckCircle, ArrowLeft, Shield, Zap } from 'lucide-react';
+import { Star, ArrowRight, Play, ArrowLeft, Zap, Activity, ChevronRight, ChevronLeft, Palette } from 'lucide-react';
 import MatchView from './MatchView';
 
 interface CareerViewProps {
@@ -11,6 +11,13 @@ interface CareerViewProps {
     onWinTrophy: () => void;
 }
 
+const HAIR_COLORS = ['#1a1a1a', '#4b2e18', '#b45309', '#facc15', '#a3a3a3', '#fafafa'];
+const BEARD_COLORS = ['#1a1a1a', '#4b2e18', '#b45309', '#a3a3a3'];
+const SKIN_TONES = ['#f5d0b0', '#e0ac69', '#aa724b', '#5c3a21'];
+
+const HAIR_STYLES = ['Careca', 'Curto', 'Moicano', 'Tigela', 'Longo'];
+const BEARD_STYLES = ['Sem Barba', 'Cavanhaque', 'Barba Cheia', 'Bigode'];
+
 const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrophy }) => {
     const [step, setStep] = useState(1);
     const [playerName, setPlayerName] = useState('');
@@ -18,6 +25,13 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
     const [myTeam, setMyTeam] = useState<Team | null>(null);
     const [inCareerMatch, setInCareerMatch] = useState(false);
     const [careerOpponent, setCareerOpponent] = useState<string>('');
+    
+    // Customization State
+    const [hairStyle, setHairStyle] = useState(1);
+    const [hairColor, setHairColor] = useState(HAIR_COLORS[1]);
+    const [beardStyle, setBeardStyle] = useState(0);
+    const [beardColor, setBeardColor] = useState(BEARD_COLORS[0]);
+    const [skinTone, setSkinTone] = useState(SKIN_TONES[1]);
     
     // Season Stats
     const [gamesPlayed, setGamesPlayed] = useState(0);
@@ -71,7 +85,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
         
         // Determine opponent for this round
         const randomOpponent = CAREER_OPPONENTS[Math.floor(Math.random() * CAREER_OPPONENTS.length)];
-        // Ensure we don't play against ourselves
+        // Ensure we don't error if daysInCurrentMonth is small
         const opponent = randomOpponent === myTeam?.name ? "Rival Local FC" : randomOpponent;
         
         setCareerOpponent(opponent);
@@ -101,6 +115,66 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
         if (myTeam) onComplete(myTeam);
     };
 
+    // --- VOXEL AVATAR RENDERER ---
+    const renderAvatar = () => {
+        return (
+            <div className="relative w-40 h-48 mx-auto mb-6 transform hover:scale-105 transition-transform duration-300">
+                {/* HEAD GROUP */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-20 bg-amber-200 z-20 shadow-md" style={{ backgroundColor: skinTone }}>
+                    {/* Hair */}
+                    {hairStyle === 1 && <div className="absolute top-0 w-full h-4 z-30" style={{ backgroundColor: hairColor }}></div>} {/* Curto */}
+                    {hairStyle === 2 && <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-6 h-8 z-30" style={{ backgroundColor: hairColor }}></div>} {/* Moicano */}
+                    {hairStyle === 3 && <div className="absolute top-0 w-full h-8 z-30 rounded-t-lg" style={{ backgroundColor: hairColor }}></div>} {/* Tigela */}
+                    {hairStyle === 4 && <div className="absolute top-0 w-full h-12 z-0 -ml-1 w-[110%]" style={{ backgroundColor: hairColor }}></div>} {/* Longo */}
+                    
+                    {/* Eyes */}
+                    <div className="absolute top-8 left-4 w-2 h-2 bg-black z-30"></div>
+                    <div className="absolute top-8 right-4 w-2 h-2 bg-black z-30"></div>
+                    {/* Eyebrows */}
+                    <div className="absolute top-6 left-3 w-4 h-1 bg-black/50 z-30"></div>
+                    <div className="absolute top-6 right-3 w-4 h-1 bg-black/50 z-30"></div>
+                    
+                    {/* Beard */}
+                    {beardStyle === 1 && <div className="absolute bottom-0 w-full h-6 bg-black/20 z-20" style={{ backgroundColor: beardColor, opacity: 0.5 }}></div>} {/* Stubble */}
+                    {beardStyle === 2 && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-4 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Goatee */}
+                    {beardStyle === 3 && <div className="absolute bottom-0 w-full h-8 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Full */}
+                    {beardStyle === 4 && <div className="absolute top-12 left-1/2 -translate-x-1/2 w-10 h-2 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Mustache */}
+
+                    {/* Mouth (Smile) */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-1 bg-red-900/50 z-20"></div>
+                </div>
+
+                {/* BODY GROUP (The Jersey from Photo) */}
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 w-24 h-20 z-10 flex shadow-md">
+                    {/* Left Side Red */}
+                    <div className="w-1/2 h-full bg-[#ef4444] relative">
+                         <div className="absolute top-4 left-2 text-[6px] text-white font-bold opacity-80">M</div>
+                         <div className="absolute top-8 left-2 text-[4px] text-white font-bold leading-tight w-8">TOUCH2GOAL</div>
+                    </div>
+                    {/* Right Side Blue */}
+                    <div className="w-1/2 h-full bg-[#3b82f6] relative">
+                        <div className="absolute top-4 right-2 w-3 h-4 bg-purple-900 rounded-b-full border border-white"></div>
+                    </div>
+                    {/* Sleeves */}
+                    <div className="absolute top-0 -left-6 w-6 h-12 bg-[#3b82f6] origin-top-right rotate-12"></div>
+                    <div className="absolute top-0 -right-6 w-6 h-12 bg-[#ef4444] origin-top-left -rotate-12 border-b-4 border-blue-600"></div>
+                </div>
+
+                {/* SHORTS */}
+                <div className="absolute top-40 left-1/2 -translate-x-1/2 w-20 h-10 bg-[#3b82f6] z-10 flex">
+                    <div className="w-1/2 h-full border-r border-blue-700"></div>
+                    <div className="w-1/2 h-full"></div>
+                </div>
+
+                {/* LEGS */}
+                <div className="absolute top-48 left-1/2 -translate-x-1/2 w-20 h-12 z-0 flex justify-between px-1">
+                    <div className="w-6 h-full bg-blue-700 rounded-b-sm border-b-4 border-[#ef4444]"></div> {/* Left Sock */}
+                    <div className="w-6 h-full bg-blue-700 rounded-b-sm border-b-4 border-[#ef4444]"></div> {/* Right Sock */}
+                </div>
+            </div>
+        )
+    }
+
     // If Playing a Match inside Career
     if (inCareerMatch && myTeam) {
         return <MatchView team={myTeam} onFinish={handleMatchFinish} opponentName={careerOpponent} skipSetup={true} />;
@@ -109,21 +183,98 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
     return (
         <div className="min-h-screen bg-violet-900 text-white flex flex-col">
             {step === 1 && (
-                <div className="flex-1 flex flex-col items-center justify-center p-6">
-                    <div className="w-full max-w-sm animate-in zoom-in">
-                        <div className="w-20 h-20 bg-violet-700 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-violet-600">
-                            <User size={40} />
+                <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto no-scrollbar">
+                    <div className="w-full max-w-sm animate-in zoom-in pb-10">
+                        <h2 className="text-2xl font-bold text-center mb-6 text-yellow-400">Crie seu Craque</h2>
+                        
+                        {/* Avatar Preview */}
+                        <div className="bg-white/10 p-6 rounded-3xl mb-6 backdrop-blur-sm border border-white/10 relative">
+                             {renderAvatar()}
+                             <div className="absolute bottom-2 right-2 opacity-50">
+                                <Activity size={20} className="text-white animate-pulse"/>
+                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold text-center mb-6">Crie seu Jogador</h2>
-                        <input 
-                            type="text" 
-                            placeholder="Seu Nome" 
-                            className="w-full p-4 rounded-xl bg-violet-800 border border-violet-600 text-white placeholder-violet-400 mb-4 outline-none focus:border-yellow-400 transition-colors"
-                            value={playerName}
-                            onChange={(e) => setPlayerName(e.target.value)}
-                        />
-                        <button onClick={handleCreate} className="w-full bg-yellow-400 hover:bg-yellow-300 text-violet-900 font-bold py-3 rounded-xl transition-colors">Continuar</button>
-                        <button onClick={onCancel} className="w-full mt-4 text-violet-400 text-sm">Cancelar</button>
+
+                        {/* Name Input */}
+                        <div className="mb-6">
+                            <label className="text-xs font-bold text-violet-300 uppercase ml-1">Nome do Jogador</label>
+                            <input 
+                                type="text" 
+                                placeholder="Seu Nome" 
+                                className="w-full p-4 rounded-xl bg-violet-800 border border-violet-600 text-white placeholder-violet-400 mt-1 outline-none focus:border-yellow-400 transition-colors font-bold text-lg"
+                                value={playerName}
+                                onChange={(e) => setPlayerName(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Customization Controls */}
+                        <div className="space-y-4 bg-violet-800/50 p-4 rounded-2xl border border-violet-700 mb-6">
+                            {/* Skin Tone */}
+                            <div>
+                                <div className="flex justify-between mb-2">
+                                    <span className="text-xs font-bold text-violet-300">Tom de Pele</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    {SKIN_TONES.map(color => (
+                                        <button 
+                                            key={color}
+                                            onClick={() => setSkinTone(color)}
+                                            className={`w-8 h-8 rounded-full border-2 transition-transform ${skinTone === color ? 'border-white scale-110' : 'border-transparent opacity-70'}`}
+                                            style={{ backgroundColor: color }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Hair Style */}
+                            <div className="flex items-center justify-between bg-violet-900/50 p-2 rounded-xl">
+                                <button onClick={() => setHairStyle(prev => (prev === 0 ? HAIR_STYLES.length - 1 : prev - 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20}/></button>
+                                <div className="text-center">
+                                    <span className="text-xs text-violet-400 block">Cabelo</span>
+                                    <span className="font-bold">{HAIR_STYLES[hairStyle]}</span>
+                                </div>
+                                <button onClick={() => setHairStyle(prev => (prev === HAIR_STYLES.length - 1 ? 0 : prev + 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20}/></button>
+                            </div>
+
+                             {/* Hair Color */}
+                             <div className="flex gap-2 justify-center pb-2 border-b border-white/10">
+                                {HAIR_COLORS.map(color => (
+                                    <button 
+                                        key={color}
+                                        onClick={() => setHairColor(color)}
+                                        className={`w-6 h-6 rounded-full border-2 transition-transform ${hairColor === color ? 'border-white scale-110' : 'border-transparent opacity-50'}`}
+                                        style={{ backgroundColor: color }}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Beard Style */}
+                            <div className="flex items-center justify-between bg-violet-900/50 p-2 rounded-xl">
+                                <button onClick={() => setBeardStyle(prev => (prev === 0 ? BEARD_STYLES.length - 1 : prev - 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20}/></button>
+                                <div className="text-center">
+                                    <span className="text-xs text-violet-400 block">Barba</span>
+                                    <span className="font-bold">{BEARD_STYLES[beardStyle]}</span>
+                                </div>
+                                <button onClick={() => setBeardStyle(prev => (prev === BEARD_STYLES.length - 1 ? 0 : prev + 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20}/></button>
+                            </div>
+
+                             {/* Beard Color */}
+                             <div className="flex gap-2 justify-center">
+                                {BEARD_COLORS.map(color => (
+                                    <button 
+                                        key={color}
+                                        onClick={() => setBeardColor(color)}
+                                        className={`w-6 h-6 rounded-full border-2 transition-transform ${beardColor === color ? 'border-white scale-110' : 'border-transparent opacity-50'}`}
+                                        style={{ backgroundColor: color }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <button onClick={handleCreate} className="w-full bg-yellow-400 hover:bg-yellow-300 text-violet-900 font-bold py-4 rounded-xl transition-colors shadow-lg shadow-yellow-400/20 text-lg">
+                            Iniciar Carreira
+                        </button>
+                        <button onClick={onCancel} className="w-full mt-4 text-violet-400 text-sm font-medium py-2">Cancelar</button>
                     </div>
                 </div>
             )}
@@ -180,7 +331,18 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                     {/* Career Hub Header */}
                     <div className="p-6 bg-gradient-to-b from-violet-900 to-slate-900 pb-10">
                          <div className="flex items-center gap-4 mb-6">
-                             <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center text-3xl">👤</div>
+                             {/* Mini Voxel Head for Hub */}
+                             <div className="w-16 h-16 bg-amber-200 rounded-xl overflow-hidden relative border-2 border-white/20" style={{ backgroundColor: skinTone }}>
+                                 {hairStyle === 1 && <div className="absolute top-0 w-full h-3" style={{ backgroundColor: hairColor }}></div>}
+                                 {hairStyle === 2 && <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-6" style={{ backgroundColor: hairColor }}></div>}
+                                 {hairStyle === 3 && <div className="absolute top-0 w-full h-6 rounded-t-md" style={{ backgroundColor: hairColor }}></div>}
+                                 {hairStyle === 4 && <div className="absolute top-0 w-full h-8" style={{ backgroundColor: hairColor }}></div>}
+                                 
+                                 <div className="absolute top-6 left-3 w-1.5 h-1.5 bg-black"></div>
+                                 <div className="absolute top-6 right-3 w-1.5 h-1.5 bg-black"></div>
+                                 {beardStyle !== 0 && <div className="absolute bottom-0 w-full h-4 opacity-50" style={{ backgroundColor: beardColor }}></div>}
+                             </div>
+
                              <div>
                                  <h1 className="text-2xl font-bold">{playerName}</h1>
                                  <p className="text-violet-300 text-sm">Atleta do {myTeam.name}</p>
@@ -233,7 +395,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                             </div>
                         ) : (
                             <div className="bg-yellow-500 text-slate-900 p-6 rounded-2xl mb-6 text-center animate-bounce">
-                                <Trophy className="mx-auto mb-2" size={40} />
+                                <Star className="mx-auto mb-2" size={40} fill="currentColor" />
                                 <h3 className="font-bold text-xl">Temporada Finalizada!</h3>
                                 <p className="text-sm font-medium">Você conquistou o Troféu Estrelato!</p>
                             </div>
@@ -248,7 +410,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                 </div>
             )}
 
-            {/* STEP 5: MATCH DAY MENU (REPLACED GRID) */}
+            {/* STEP 5: MATCH DAY MENU */}
             {step === 5 && myTeam && (
                 <div className="flex-1 flex flex-col bg-slate-900 animate-in slide-in-from-right">
                      {/* Header */}
