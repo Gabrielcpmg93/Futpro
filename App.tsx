@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import TeamSelector from './components/TeamSelector';
 import Layout from './components/Layout';
@@ -51,207 +50,157 @@ const App: React.FC = () => {
     setUserTeam(team);
   };
 
-  const handleMatchFinish = async (result: 'win' | 'loss' | 'draw', userScore: number = 0, opponentScore: number = 0) => {
-      let opponent = "Adversário";
-      let gf = userScore;
-      let ga = opponentScore;
-
-      // Fallback if numbers are 0 and result suggests otherwise (unlikely with new MatchView, but safe fallback)
-      if (gf === 0 && ga === 0) {
-           if (result === 'win') { gf = 2; ga = 1; }
-           else if (result === 'loss') { gf = 0; ga = 2; }
-           else { gf = 1; ga = 1; }
-      }
-
-      if (isPlayingLeagueMatch && userTeam) {
-          opponent = leagueOpponent;
-          const newTable = updateLeagueTable(leagueTable, result, gf, ga);
-          setLeagueTable(newTable);
-          
-          const nextRound = currentRound + 1;
-          setCurrentRound(nextRound);
-          setIsPlayingLeagueMatch(false);
-
-          // Check Trophy (After last round)
-          if (currentRound === TOTAL_LEAGUE_ROUNDS) {
-              const winner = newTable[0];
-              if (winner.isUser) {
-                   if (!userTeam.trophies.includes("Troféu Brasileirão")) {
-                       setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Troféu Brasileirão"] });
-                       alert("🏆 É CAMPEÃO! Você venceu o Brasileirão Fictício!");
-                   }
-              }
-          }
-          
-          // Generate News
-          const news = await generatePostMatchNews(userTeam.name, opponent, gf, ga);
-          setLatestNews(news);
-
-          setCurrentScreen(ScreenState.LEAGUE_TABLE);
-          return;
-      }
-
-      // Friendly logic
-      if (userTeam) {
-          if (result === 'win') {
-             setUserTeam({ ...userTeam, budget: userTeam.budget + 100000 }); // Win bonus
-          }
-          // For friendlies, we can still generate news, but maybe less critical
-          // Assuming the opponent name was set elsewhere or generic
-          const news = await generatePostMatchNews(userTeam.name, "Time Fictício", gf, ga);
-          setLatestNews(news);
-      }
-      
-      setCurrentScreen(ScreenState.HOME);
+  const handleNavigate = (screen: ScreenState) => {
+    setCurrentScreen(screen);
   };
 
-  const handleCopaMatchRecord = async (opponent: string, result: 'win' | 'loss' | 'draw', gf: number, ga: number) => {
-      if (userTeam) {
-          const news = await generatePostMatchNews(userTeam.name, opponent, gf, ga);
-          setLatestNews(news);
-      }
-  };
+  // --- MATCH HANDLERS ---
 
-  const handleCopaWin = () => {
-      if (userTeam) {
-          if (!userTeam.trophies.includes("Copa das Américas")) {
-            setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Copa das Américas"] });
-          }
-      }
-  };
-
-  const handleCareerTrophy = () => {
-      if (userTeam) {
-          // Check if already has trophy to avoid duplicates if triggered multiple times
-          if (!userTeam.trophies.includes("Troféu Estrelato")) {
-            setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Troféu Estrelato"] });
-          }
-      }
-  };
-
-  const handleStartLeagueMatch = () => {
-      if (currentRound > TOTAL_LEAGUE_ROUNDS) {
-          alert("O campeonato acabou!");
-          return;
-      }
-
-      // Pick random opponent from table (that is not user)
-      const possibleOpponents = leagueTable.filter(t => !t.isUser);
-      const randomOpponent = possibleOpponents[Math.floor(Math.random() * possibleOpponents.length)];
-      
-      setLeagueOpponent(randomOpponent.name);
+  const handlePlayLeagueMatch = () => {
+      // Find next opponent
+      const opponent = leagueTable.filter(t => !t.isUser)[Math.floor(Math.random() * 19)];
+      setLeagueOpponent(opponent.name);
       setIsPlayingLeagueMatch(true);
       setCurrentScreen(ScreenState.MATCH);
-  }
+  };
+
+  const handleStart3DLeagueMatch = () => {
+      // 3D Matches also count for league in this version
+      const opponent = leagueTable.filter(t => !t.isUser)[Math.floor(Math.random() * 19)];
+      setLeagueOpponent(opponent.name);
+      setIsPlayingLeagueMatch(true); // Flag as league match to update table
+      setCurrentScreen(ScreenState.MATCH_3D);
+  };
+
+  const handleMatchFinish = (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => {
+      if (isPlayingLeagueMatch && userTeam) {
+          // Update Table
+          const newTable = updateLeagueTable(leagueTable, result, userScore, opponentScore);
+          setLeagueTable(newTable);
+          
+          // Generate News
+          generatePostMatchNews(userTeam.name, leagueOpponent, userScore, opponentScore).then(news => setLatestNews(news));
+
+          // Increment Round
+          if (currentRound < TOTAL_LEAGUE_ROUNDS) {
+              setCurrentRound(prev => prev + 1);
+          }
+      }
+      
+      setIsPlayingLeagueMatch(false);
+      setCurrentScreen(ScreenState.PLAY_HUB);
+  };
+
+  // --- RENDER ---
 
   if (currentScreen === ScreenState.SELECT_TEAM) {
     return <TeamSelector onTeamSelected={handleTeamSelect} />;
   }
 
-  if (currentScreen === ScreenState.CAREER_MODE) {
-      return (
-        <CareerView 
-            onComplete={handleTeamSelect} 
-            onCancel={() => setCurrentScreen(ScreenState.HOME)} 
-            onWinTrophy={handleCareerTrophy}
-        />
-      );
-  }
-
-  if (currentScreen === ScreenState.FRIENDLY_SETUP) {
-      return <FriendlyView onBack={() => setCurrentScreen(ScreenState.HOME)} />;
-  }
-
   if (!userTeam) return null;
-
-  // Full screen views (no bottom nav)
-  if (currentScreen === ScreenState.MATCH) {
-    return (
-        <MatchView 
-            team={userTeam} 
-            onFinish={handleMatchFinish} 
-            opponentName={isPlayingLeagueMatch ? leagueOpponent : "Dragões do Sul"}
-            // Give random color for opponent
-            opponentColor={isPlayingLeagueMatch ? "#" + Math.floor(Math.random()*16777215).toString(16) : "#dc2626"}
-        />
-    );
-  }
-
-  // Route for 3D Match
-  if (currentScreen === ScreenState.MATCH_3D) {
-    return (
-        <Match3DView 
-            team={userTeam}
-            opponentName="CPU FC"
-            onFinish={handleMatchFinish}
-        />
-    )
-  }
-  
-  if (currentScreen === ScreenState.COPA_AMERICAS) {
-      return <CopaView 
-        team={userTeam} 
-        onBack={() => setCurrentScreen(ScreenState.HOME)} 
-        onWinTrophy={handleCopaWin} 
-        onMatchRecord={handleCopaMatchRecord}
-      />;
-  }
-
-  if (currentScreen === ScreenState.LEAGUE_TABLE) {
-      return (
-          <LeagueView 
-            table={leagueTable}
-            currentRound={currentRound}
-            totalRounds={TOTAL_LEAGUE_ROUNDS}
-            onBack={() => setCurrentScreen(ScreenState.HOME)}
-          />
-      )
-  }
-
-  if (currentScreen === ScreenState.NEWS) {
-      return <NewsView news={latestNews} onBack={() => setCurrentScreen(ScreenState.HOME)} />
-  }
-
-  if (currentScreen === ScreenState.YOUTH_ACADEMY) {
-      return <YouthAcademyView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
-  }
-
-  if (currentScreen === ScreenState.CALENDAR) {
-    return (
-      <CalendarView 
-        onBack={() => setCurrentScreen(ScreenState.HOME)} 
-        onScheduleFriendly={() => setCurrentScreen(ScreenState.FRIENDLY_SETUP)}
-      />
-    );
-  }
-
-  if (currentScreen === ScreenState.CITY_BUILDER) {
-    return (
-      <CityBuilderView onBack={() => setCurrentScreen(ScreenState.HOME)} />
-    );
-  }
 
   return (
     <Layout currentScreen={currentScreen} onNavigate={setCurrentScreen}>
       {currentScreen === ScreenState.HOME && (
         <Dashboard team={userTeam} onNavigate={setCurrentScreen} onUpdateTeam={handleUpdateTeam} />
       )}
+      
+      {currentScreen === ScreenState.SQUAD && (
+        <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
+      )}
+
+      {currentScreen === ScreenState.MARKET && (
+        <MarketView team={userTeam} onUpdateTeam={handleUpdateTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+
+      {currentScreen === ScreenState.SOCIAL && (
+        <SocialView teamName={userTeam.name} />
+      )}
+
       {currentScreen === ScreenState.PLAY_HUB && (
         <PlayHub 
             team={userTeam} 
             onNavigate={setCurrentScreen} 
-            onPlayLeagueMatch={handleStartLeagueMatch}
+            onPlayLeagueMatch={handlePlayLeagueMatch}
+            onPlay3DMatch={handleStart3DLeagueMatch}
             currentRound={currentRound}
         />
       )}
-      {currentScreen === ScreenState.SQUAD && (
-        <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
+
+      {currentScreen === ScreenState.MATCH && (
+          <MatchView 
+            team={userTeam} 
+            opponentName={leagueOpponent}
+            onFinish={handleMatchFinish}
+          />
       )}
-      {currentScreen === ScreenState.MARKET && (
-        <MarketView team={userTeam} onUpdateTeam={handleUpdateTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+
+      {currentScreen === ScreenState.MATCH_3D && (
+          <Match3DView 
+            team={userTeam} 
+            opponentName={leagueOpponent}
+            onFinish={handleMatchFinish}
+            onBack={() => setCurrentScreen(ScreenState.PLAY_HUB)}
+          />
       )}
-      {currentScreen === ScreenState.SOCIAL && (
-        <SocialView teamName={userTeam.name} />
+
+      {currentScreen === ScreenState.LEAGUE_TABLE && (
+          <LeagueView 
+            table={leagueTable} 
+            currentRound={currentRound} 
+            totalRounds={TOTAL_LEAGUE_ROUNDS} 
+            onBack={() => setCurrentScreen(ScreenState.HOME)} 
+          />
+      )}
+
+      {currentScreen === ScreenState.NEWS && (
+          <NewsView news={latestNews} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+
+      {currentScreen === ScreenState.FRIENDLY_SETUP && (
+          <FriendlyView onBack={() => setCurrentScreen(ScreenState.PLAY_HUB)} />
+      )}
+
+      {currentScreen === ScreenState.COPA_AMERICAS && (
+          <CopaView 
+            team={userTeam} 
+            onBack={() => setCurrentScreen(ScreenState.HOME)} 
+            onWinTrophy={() => setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Copa das Américas"] })}
+            onMatchRecord={(opp, res, us, os) => {
+                // Optional: update news for Copa
+                generatePostMatchNews(userTeam.name, opp, us, os).then(news => setLatestNews(news));
+            }}
+          />
+      )}
+
+      {currentScreen === ScreenState.CAREER_MODE && (
+          <CareerView 
+            onComplete={(careerTeam) => {
+                 setUserTeam(careerTeam);
+                 setCurrentScreen(ScreenState.HOME);
+            }} 
+            onCancel={() => setCurrentScreen(ScreenState.HOME)}
+            onWinTrophy={() => setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Estrelato"] })}
+          />
+      )}
+
+      {currentScreen === ScreenState.YOUTH_ACADEMY && (
+          <YouthAcademyView 
+            team={userTeam}
+            onBack={() => setCurrentScreen(ScreenState.HOME)}
+            onUpdateTeam={handleUpdateTeam}
+          />
+      )}
+
+      {currentScreen === ScreenState.CALENDAR && (
+          <CalendarView 
+            onBack={() => setCurrentScreen(ScreenState.HOME)}
+            onScheduleFriendly={() => setCurrentScreen(ScreenState.FRIENDLY_SETUP)}
+          />
+      )}
+
+      {currentScreen === ScreenState.CITY_BUILDER && (
+          <CityBuilderView onBack={() => setCurrentScreen(ScreenState.HOME)} />
       )}
     </Layout>
   );

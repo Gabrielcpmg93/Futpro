@@ -1,27 +1,35 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Team } from '../types';
-import { Trophy, Hand } from 'lucide-react';
+import { ArrowLeft, Hand } from 'lucide-react';
 
 interface Match3DViewProps {
   team: Team;
   opponentName?: string;
   opponentColor?: string;
   onFinish: (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => void;
+  onBack: () => void;
 }
 
 // --- CONSTANTS & HELPERS ---
 const TOTAL_ROUNDS = 5;
 
-// Helper to get alternating difficulty
-const getMatchDifficulty = () => {
-    const lastResult = localStorage.getItem('match_pattern_index');
-    const index = lastResult ? parseInt(lastResult) : 0;
-    // Update for next time
-    localStorage.setItem('match_pattern_index', (index + 1).toString());
+// Helper to get alternating difficulty based on "Win 2, Lose 1" pattern
+// Index 0: Win (Easy)
+// Index 1: Win (Easy)
+// Index 2: Loss (Hard)
+const getMatchConfig = () => {
+    const lastIndex = localStorage.getItem('match_3d_pattern_index');
+    const index = lastIndex ? parseInt(lastIndex) : 0;
     
-    // If index is even: User favored. If odd: CPU favored.
-    return index % 2 === 0 ? 'EASY' : 'HARD'; 
+    // If index % 3 is 2, it's the 3rd match -> Hard (Loss expected)
+    // Otherwise it's Easy (Win expected)
+    const difficulty = index % 3 === 2 ? 'HARD' : 'EASY';
+    
+    return { difficulty, index };
+};
+
+const advancePatternIndex = (currentIndex: number) => {
+    localStorage.setItem('match_3d_pattern_index', (currentIndex + 1).toString());
 };
 
 // --- VOXEL COMPONENTS ---
@@ -45,7 +53,7 @@ const VoxelStadium = () => (
             className="absolute top-[25%] left-1/2 -translate-x-1/2 w-[100%] h-[100px] bg-blue-900 flex items-center justify-center"
             style={{ transform: 'translateZ(-350px)' }}
         >
-            <span className="text-white font-black text-6xl opacity-20 tracking-widest">STADIUM</span>
+            <span className="text-white font-black text-6xl opacity-20 tracking-widest">ARENA</span>
         </div>
     </div>
 );
@@ -127,10 +135,13 @@ const Match3DView: React.FC<Match3DViewProps> = ({
   team, 
   opponentName = "CPU FC", 
   opponentColor = "#ef4444",
-  onFinish 
+  onFinish,
+  onBack
 }) => {
     // Match State
-    const [difficulty] = useState(getMatchDifficulty());
+    // We only read from LS once on mount to determine "Destiny"
+    const [{ difficulty, index: patternIndex }] = useState(getMatchConfig());
+    
     const [round, setRound] = useState(1);
     const [turn, setTurn] = useState<'PLAYER' | 'CPU'>('PLAYER');
     const [score, setScore] = useState({ user: 0, cpu: 0 });
@@ -150,6 +161,13 @@ const Match3DView: React.FC<Match3DViewProps> = ({
     const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null);
     const [dragCurrent, setDragCurrent] = useState<{x: number, y: number} | null>(null);
 
+    // Initial CPU Turn trigger if needed (though we start with PLAYER usually)
+    useEffect(() => {
+        if (turn === 'CPU' && gameState === 'IDLE') {
+            setTimeout(handleCpuShoot, 1500);
+        }
+    }, [turn, gameState]);
+
     // Reset for new turn
     const setupTurn = (nextTurn: 'PLAYER' | 'CPU') => {
         setTurn(nextTurn);
@@ -160,11 +178,6 @@ const Match3DView: React.FC<Match3DViewProps> = ({
         setStrikerPos(50);
         setKeeperPose('idle');
         setStrikerPose('idle');
-
-        // If CPU turn, trigger auto-shoot after delay
-        if (nextTurn === 'CPU') {
-            setTimeout(handleCpuShoot, 1500);
-        }
     };
 
     // --- PLAYER INTERACTION (DRAG) ---
@@ -198,10 +211,8 @@ const Match3DView: React.FC<Match3DViewProps> = ({
         }
 
         // Calculate Shot Vector
-        // Max sensible deltaY is ~300px (screen height fraction)
-        // Max sensible deltaX is ~150px
-        const power = Math.min(deltaY / 300, 1.2); // 0.2 to 1.2
-        const angle = Math.max(-1, Math.min(1, deltaX / 150)); // -1 (Left) to 1 (Right)
+        const power = Math.min(deltaY / 250, 1.3); // Power based on drag distance
+        const angle = Math.max(-1, Math.min(1, deltaX / 120)); // Angle based on horizontal drag
 
         executeShot(angle, power);
         setDragStart(null);
@@ -214,30 +225,45 @@ const Match3DView: React.FC<Match3DViewProps> = ({
         setGameState('SHOOTING');
         setStrikerPose('kick');
 
-        // Target Calculation (0-100 scale on X axis)
-        // 50 is center. Angle -1 -> 20. Angle 1 -> 80.
+        // Target Calculation
         const targetX = 50 + (angle * 35);
-        
-        // Z Height (simulated arc)
         const peakZ = 50 * power;
 
         // Animate Ball
         setBallPos({ x: targetX, y: 18, z: peakZ });
 
-        // Keeper AI Decision
-        // Bias depends on difficulty and who is shooting
+        // Keeper AI Decision based on Difficulty
         let keeperDiveTarget = 50;
         
         if (turn === 'PLAYER') {
-            // CPU Keeper defending
-            const errorMargin = difficulty === 'EASY' ? 25 : 10;
-            // CPU tries to guess target with some error
-            keeperDiveTarget = targetX + (Math.random() * errorMargin * (Math.random() > 0.5 ? 1 : -1));
+            // CPU Keeper defending against User
+            if (difficulty === 'HARD') {
+                // Hard Mode: Keeper reads shot perfectly with tiny error
+                keeperDiveTarget = targetX + (Math.random() * 5 * (Math.random() > 0.5 ? 1 : -1));
+            } else {
+                // Easy Mode: Keeper dives randomly or with huge error
+                const mistake = Math.random() > 0.6; 
+                if (mistake) {
+                    keeperDiveTarget = targetX > 50 ? 20 : 80; // Dive wrong way
+                } else {
+                    keeperDiveTarget = targetX + (Math.random() * 30 * (Math.random() > 0.5 ? 1 : -1));
+                }
+            }
         } else {
-            // User Keeper defending (Auto-defend for simplicity in this version, or random)
-            // If difficulty is HARD (CPU favored), User keeper dives badly
-            const errorMargin = difficulty === 'HARD' ? 30 : 10;
-            keeperDiveTarget = targetX + (Math.random() * errorMargin * (Math.random() > 0.5 ? 1 : -1));
+            // User Keeper (CPU is shooting)
+            // Note: In this simple version, user keeper is auto-controlled or static
+            // To simulate "User loses matches in Hard mode", the CPU shot must score.
+            
+            // User keeper defense logic (Simulated)
+            // In Hard mode, user keeper is bad. In Easy mode, user keeper is good.
+            const keeperSkill = difficulty === 'HARD' ? 0.2 : 0.9;
+            
+            // Keeper attempts to guess target
+            if (Math.random() < keeperSkill) {
+               keeperDiveTarget = targetX + (Math.random() * 10 - 5); // Good save attempt
+            } else {
+               keeperDiveTarget = targetX + (Math.random() * 50 - 25); // Bad save attempt
+            }
         }
 
         // Animate Keeper
@@ -245,10 +271,10 @@ const Match3DView: React.FC<Match3DViewProps> = ({
             setKeeperPos(keeperDiveTarget);
             if (keeperDiveTarget < 45) setKeeperPose('dive-left');
             else if (keeperDiveTarget > 55) setKeeperPose('dive-right');
-            else setKeeperPose('idle'); // Stay center
+            else setKeeperPose('idle');
         }, 100);
 
-        // Calculate Result after flight time
+        // Calculate Result
         setTimeout(() => {
             const isGoal = checkCollision(targetX, keeperDiveTarget);
             handleResult(isGoal);
@@ -256,9 +282,19 @@ const Match3DView: React.FC<Match3DViewProps> = ({
     };
 
     const handleCpuShoot = () => {
-        // Random shot
-        const angle = (Math.random() * 2) - 1; // -1 to 1
-        const power = 0.8 + Math.random() * 0.3;
+        // CPU Aiming Logic
+        let angle, power;
+        
+        if (difficulty === 'HARD') {
+            // Hard: CPU aims for corners with good power
+            angle = (Math.random() > 0.5 ? 0.8 : -0.8) + (Math.random() * 0.1);
+            power = 1.0 + Math.random() * 0.2;
+        } else {
+            // Easy: CPU aims center or misses
+            angle = (Math.random() * 1.0) - 0.5; 
+            power = 0.6 + Math.random() * 0.4;
+        }
+
         executeShot(angle, power);
     };
 
@@ -299,14 +335,11 @@ const Match3DView: React.FC<Match3DViewProps> = ({
     };
 
     const finishMatch = () => {
-        // Final score check might need state update delay consideration, but for simplicity:
-        // We calculate final outcome based on current score state (React batching might be an issue if instant, but we have delay)
-        // To be safe, use functional update logic or re-check.
-        onFinish(
-            score.user > score.cpu ? 'win' : score.user < score.cpu ? 'loss' : 'draw',
-            score.user,
-            score.cpu
-        );
+        // Update the pattern index for next time
+        advancePatternIndex(patternIndex);
+        
+        const winner = score.user > score.cpu ? 'win' : score.user < score.cpu ? 'loss' : 'draw';
+        onFinish(winner, score.user, score.cpu);
     };
 
     return (
@@ -314,6 +347,15 @@ const Match3DView: React.FC<Match3DViewProps> = ({
             
             {/* HUD */}
             <div className="absolute top-4 left-0 w-full z-50 px-4 flex justify-between items-start pointer-events-none">
+                 
+                 {/* Back Button */}
+                 <button 
+                    onClick={onBack}
+                    className="pointer-events-auto bg-white/10 text-white p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-colors"
+                 >
+                    <ArrowLeft size={24} />
+                 </button>
+
                  <div className="bg-slate-900/80 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/10 flex flex-col items-center">
                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placar</div>
                     <div className="text-3xl font-mono font-bold flex gap-4">
@@ -323,26 +365,27 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                     </div>
                 </div>
 
-                {resultMsg && (
-                    <div className="absolute top-24 left-1/2 -translate-x-1/2 animate-bounce-in z-50">
-                        <h1 className={`text-6xl font-black drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] tracking-tighter italic transform -rotate-6 ${resultMsg === 'GOL!' ? 'text-yellow-400 stroke-black' : 'text-white'}`}>
-                            {resultMsg}
-                        </h1>
-                    </div>
-                )}
-
                 <div className="bg-slate-900/80 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/10">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase text-right">Penaltis</div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase text-right">Chutes</div>
                     <div className="text-xl font-bold">{round} / {TOTAL_ROUNDS}</div>
                 </div>
             </div>
 
             {/* Turn Indicator */}
-            <div className="absolute top-20 w-full text-center z-40 pointer-events-none">
+            <div className="absolute top-24 w-full text-center z-40 pointer-events-none">
                 <span className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg ${turn === 'PLAYER' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                     {turn === 'PLAYER' ? 'Sua Vez' : 'Vez do Adversário'}
                 </span>
             </div>
+
+            {/* RESULT MESSAGE POPUP */}
+            {resultMsg && (
+                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 animate-bounce-in z-50 pointer-events-none">
+                    <h1 className={`text-6xl font-black drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] tracking-tighter italic transform -rotate-6 ${resultMsg === 'GOL!' ? 'text-yellow-400 stroke-black' : 'text-white'}`}>
+                        {resultMsg}
+                    </h1>
+                </div>
+            )}
 
             {/* 3D SCENE */}
             <div 
@@ -375,22 +418,18 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                         {/* Goal Area Lines */}
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[15%] border-x-4 border-b-4 border-white/60 bg-white/5"></div>
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[6%] border-x-4 border-b-4 border-white/60"></div>
-                        <div className="absolute top-[11%] left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div> {/* Penalty Spot */}
+                        <div className="absolute top-[11%] left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
                     </div>
 
                     {/* 3D GOAL */}
                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[34%] h-14 transform-style-3d z-10">
-                        {/* Net */}
                         <div className="absolute top-0 left-0 w-full h-full bg-white/30 border-2 border-slate-200" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '4px 4px' }}></div>
-                        {/* Posts */}
                         <div className="absolute left-0 top-0 h-full w-1.5 bg-white shadow-lg"></div>
                         <div className="absolute right-0 top-0 h-full w-1.5 bg-white shadow-lg"></div>
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-white shadow-lg"></div>
                     </div>
 
                     {/* ENTITIES */}
-
-                    {/* GOALKEEPER (Opponent or User based on turn) */}
                     <VoxelPlayer 
                         color={turn === 'PLAYER' ? opponentColor : team.primaryColor}
                         x={keeperPos} 
@@ -400,8 +439,6 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                         pose={keeperPose}
                     />
 
-                    {/* STRIKER (User or Opponent) */}
-                    {/* Rendered slightly behind ball start pos to look correct */}
                     <VoxelPlayer 
                         color={turn === 'PLAYER' ? team.primaryColor : opponentColor}
                         x={strikerPos} 
@@ -416,16 +453,14 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                         style={{ 
                             left: `${ballPos.x}%`, 
                             top: `${ballPos.y}%`,
-                            transform: `translate(-50%, -50%) translateZ(${ballPos.z}px) rotateX(${ballPos.y * 5}deg)`, // Rotate as it moves
-                            boxShadow: ballPos.z > 5 ? 'none' : '0 4px 6px rgba(0,0,0,0.3)' // Shadow removal when flying
+                            transform: `translate(-50%, -50%) translateZ(${ballPos.z}px) rotateX(${ballPos.y * 5}deg)`, 
+                            boxShadow: ballPos.z > 5 ? 'none' : '0 4px 6px rgba(0,0,0,0.3)'
                         }}
                     >
-                        {/* 3D Ball Look */}
                         <div className="w-full h-full bg-white rounded-full border border-gray-300 relative overflow-hidden">
                              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-20"></div>
                              <div className="absolute top-1/2 left-1/2 w-full h-1 bg-black/10 -translate-x-1/2 -rotate-45"></div>
                         </div>
-                        {/* Dynamic Shadow on ground if flying */}
                         {ballPos.z > 5 && (
                              <div 
                                 className="absolute top-full left-1/2 -translate-x-1/2 w-4 h-1 bg-black/20 rounded-full blur-sm transition-all duration-300"

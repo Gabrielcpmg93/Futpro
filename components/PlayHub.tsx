@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Team, ScreenState } from '../types';
 import { Play, Trophy, Users, Shield, Calendar, ArrowRight, Gamepad2 } from 'lucide-react';
@@ -7,10 +6,11 @@ interface PlayHubProps {
   team: Team;
   onNavigate: (screen: ScreenState) => void;
   onPlayLeagueMatch: () => void;
+  onPlay3DMatch: () => void;
   currentRound: number;
 }
 
-const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, currentRound }) => {
+const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, onPlay3DMatch, currentRound }) => {
   return (
     <div className="p-6 pb-24 animate-in fade-in duration-500 min-h-screen bg-slate-50">
       <h1 className="text-3xl font-bold text-slate-900 mb-6">Central de Jogos</h1>
@@ -36,7 +36,7 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, 
 
         {/* 3D Match Card - NEW */}
         <button 
-            onClick={() => onNavigate(ScreenState.MATCH_3D)}
+            onClick={onPlay3DMatch}
             className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-6 rounded-3xl relative overflow-hidden shadow-xl group transition-transform active:scale-95 text-left"
         >
              <div className="absolute bottom-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
@@ -47,7 +47,7 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, 
                 <div className="flex justify-between w-full items-start">
                     <div>
                         <h2 className="text-2xl font-bold mb-1">Partida 3D</h2>
-                        <p className="text-indigo-200 text-sm mb-4">Jogue os Melhores Momentos (Estilo Voxel)</p>
+                        <p className="text-indigo-200 text-sm mb-4">Jogue os Melhores Momentos (Valendo Pontos)</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-white text-sm font-bold uppercase tracking-wide bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm">
