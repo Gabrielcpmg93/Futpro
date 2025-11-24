@@ -21,7 +21,7 @@ interface Entity {
     c: number;
     dir: Direction;
     color: string;
-    // For pedestrians to stick to specific sidewalk sides (0-3: top, right, bottom, left)
+    // For pedestrians to stick to specific sidewalk sides (0: top, 1: right, 2: bottom, 3: left)
     sideWalkSide?: number; 
 }
 
@@ -42,18 +42,25 @@ const getTileStyle = (grid: TileType[][], type: TileType, r: number, c: number) 
          const right = isRoad(r, c+1);
          const isolated = !top && !bottom && !left && !right;
 
-         // WIDER SIDEWALKS: Road is now 40% width (leaving 30% sidewalk on each side)
-         const roadWidthClass = "w-[40%]";
-         const roadHeightClass = "h-[40%]";
+         // WIDER ROADS & SIDEWALKS
+         // Road is now 60% of the tile (bigger asphalt), leaving 20% sidewalk on each side.
+         const roadWidthClass = "w-[60%]";
+         const roadHeightClass = "h-[60%]";
 
          return (
              <div className="w-full h-full bg-stone-300 relative flex items-center justify-center overflow-hidden">
-                 {/* Sidewalk Pattern (curb) */}
-                 <div className="absolute inset-0 border-[0.5px] border-stone-400 opacity-30 pointer-events-none"></div>
+                 {/* Sidewalk Pattern (curb stones) */}
+                 <div className="absolute inset-0 border-[0.5px] border-stone-400 opacity-40 pointer-events-none"></div>
+                 
+                 {/* Inner Sidewalk texture */}
+                 <div className="absolute inset-0 opacity-10 pointer-events-none" 
+                      style={{backgroundImage: 'radial-gradient(circle, #57534e 1px, transparent 1px)', backgroundSize: '4px 4px'}}>
+                 </div>
 
                  {/* Center Block (The Asphalt Intersection) */}
-                 <div className={`absolute ${roadWidthClass} ${roadHeightClass} bg-slate-700 z-10 rounded-sm`}>
+                 <div className={`absolute ${roadWidthClass} ${roadHeightClass} bg-slate-700 z-10 rounded-sm shadow-inner`}>
                      {/* Center dashed lines intersection */}
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-slate-600 rounded-full opacity-50"></div>
                  </div>
 
                  {/* Road Segments */}
@@ -63,13 +70,13 @@ const getTileStyle = (grid: TileType[][], type: TileType, r: number, c: number) 
                      </div>
                  )}
                  {(left || right || isolated) && (
-                     <div className={`absolute h-[40%] w-full bg-slate-700 flex flex-col justify-center items-center`}>
+                     <div className={`absolute h-[60%] w-full bg-slate-700 flex flex-col justify-center items-center`}>
                          <div className="w-full border-b border-dashed border-white/60 h-0"></div>
                      </div>
                  )}
                  
                  {/* Asphalt texture */}
-                 <div className="absolute inset-0 opacity-10 pointer-events-none" 
+                 <div className="absolute inset-0 opacity-10 pointer-events-none z-10" 
                       style={{backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '3px 3px'}}>
                  </div>
              </div>
@@ -79,7 +86,7 @@ const getTileStyle = (grid: TileType[][], type: TileType, r: number, c: number) 
     if (type === 'house') {
         return (
             <div className="w-full h-full relative bg-[#86efac] p-[2px]">
-                {/* Driveway connecting to road (assuming road is adjacent) */}
+                {/* Driveway connecting to road */}
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[30%] h-[20%] bg-stone-300"></div>
                 
                 <div className="w-full h-full flex flex-col relative shadow-[2px_2px_4px_rgba(0,0,0,0.3)] transition-transform hover:-translate-y-0.5">
@@ -135,7 +142,6 @@ const getTileStyle = (grid: TileType[][], type: TileType, r: number, c: number) 
 };
 
 // --- MEMOIZED GRID COMPONENT ---
-// This is critical for optimization. The 400 tiles (20x20) won't re-render every game tick.
 const CityGrid = memo(({ grid, onTileClick }: { grid: TileType[][], onTileClick: (r: number, c: number) => void }) => {
     return (
         <div 
@@ -333,16 +339,22 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
                            { dr: 0, dc: 1, d: 'RIGHT' }
                        ];
                        
+                       // Filter only valid moves (staying on road tiles)
                        const validMoves = moves.filter(m => isRoad(r + m.dr, c + m.dc));
                        
-                       if (Math.random() < 0.7 && validMoves.length > 0) {
+                       if (Math.random() < 0.5 && validMoves.length > 0) {
                            const move = validMoves[Math.floor(Math.random() * validMoves.length)];
+                           
+                           // Determine new sidewalk side based on move direction
+                           // If moving vertically (UP/DOWN), they should be on Left (3) or Right (1) side
+                           // If moving horizontally (LEFT/RIGHT), they should be on Top (0) or Bottom (2) side
+                           // BUT to keep it simple and ensure they don't clip, we keep their side unless they turn corner.
+                           
                            return { 
                                ...entity, 
                                r: r + move.dr, 
                                c: c + move.dc,
                                dir: move.d as Direction,
-                               sideWalkSide: Math.random() > 0.8 ? Math.floor(Math.random() * 4) : entity.sideWalkSide
                            };
                        }
                   }
@@ -384,7 +396,7 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
             c: colIndex,
             dir: 'DOWN',
             color: ['#f87171', '#60a5fa', '#a78bfa', '#fbbf24', '#34d399'][Math.floor(Math.random()*5)],
-            sideWalkSide: Math.floor(Math.random() * 4) 
+            sideWalkSide: Math.floor(Math.random() * 4) // 0=Top, 1=Right, 2=Bottom, 3=Left
         };
         setEntities([...entities, newPed]);
         return;
@@ -406,8 +418,6 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
   };
 
   const renderEntities = () => {
-      // Scale is based on fixed map size of 1000px
-      // 20x20 grid -> 5% per tile
       const cellSize = 100 / GRID_SIZE; 
 
       return entities.map(entity => {
@@ -432,7 +442,6 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
                         style={{ 
                             backgroundColor: entity.color,
                             transform: `rotate(${rotation}deg)`,
-                            // More detail for car
                         }}
                       >
                            {/* Headlights (Yellow) */}
@@ -440,10 +449,7 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
                                <div className="w-1 h-1 bg-yellow-300 rounded-full shadow-[0_0_2px_yellow]"></div>
                                <div className="w-1 h-1 bg-yellow-300 rounded-full shadow-[0_0_2px_yellow]"></div>
                            </div>
-                           
-                           {/* Roof/Windshield */}
                            <div className="w-[80%] h-[40%] bg-slate-800/40 rounded-sm"></div>
-
                            {/* Taillights (Red) */}
                            <div className="w-full flex justify-between px-[2px]">
                                <div className="w-1 h-0.5 bg-red-500"></div>
@@ -455,17 +461,22 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
           }
 
           if (entity.type === 'pedestrian') {
+              // LOGIC TO KEEP PEDESTRIANS ON GRAY SIDEWALK
+              // Road is now 60% wide in center (20% to 80%).
+              // Sidewalks are 0-20% and 80-100%.
+              // We offset them from center (50%) to these edges (10% or 90%).
+              // 40% offset from center pushes them to the 10% or 90% mark.
+              
               let offsetX = 0;
               let offsetY = 0;
-              // Push to edges (sidewalk)
-              // Since road is 40%, sidewalk starts at 20% from edge. 
-              // We move them 30-35% to be safe.
               const side = entity.sideWalkSide || 0;
               
-              if (side === 0) offsetY = -35;
-              if (side === 1) offsetX = 35;
-              if (side === 2) offsetY = 35;
-              if (side === 3) offsetX = -35;
+              const OFFSET_VAL = 40; // Percentage to move away from center
+
+              if (side === 0) offsetY = -OFFSET_VAL; // Top
+              if (side === 1) offsetX = OFFSET_VAL;  // Right
+              if (side === 2) offsetY = OFFSET_VAL;  // Bottom
+              if (side === 3) offsetX = -OFFSET_VAL; // Left
 
               return (
                   <div 
@@ -482,12 +493,12 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
                         className="flex flex-col items-center animate-bounce"
                         style={{ 
                             transform: `translate(${offsetX}%, ${offsetY}%)`,
-                            animationDuration: '0.8s'
+                            animationDuration: '0.8s',
+                            // Scale down pedestrian slightly so they fit on the 20% sidewalk strip
+                            scale: '0.8' 
                         }}
                       >
-                           {/* Head */}
                            <div className="w-2 h-2 bg-orange-200 rounded-full border border-black/10 z-10"></div>
-                           {/* Shoulders */}
                            <div className="w-3 h-2 rounded-full -mt-1" style={{ backgroundColor: entity.color }}></div>
                       </div>
                   </div>
@@ -546,7 +557,7 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
           <div 
             className="min-w-fit min-h-fit p-10 flex items-center justify-center transition-all duration-100 origin-top-left"
             style={{
-                 width: `${1000 * zoom + 80}px`, // Padding included in scroll width calculation
+                 width: `${1000 * zoom + 80}px`, 
                  height: `${1000 * zoom + 80}px`
             }}
           >
