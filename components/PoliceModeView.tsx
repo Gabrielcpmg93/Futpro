@@ -102,7 +102,7 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 setTimeout(() => setSelectedCar(null), 500);
                 break;
         }
-        setActionLog(prev => [result, ...prev].slice(0, 3));
+        setActionLog(prev => [result, ...prev].slice(0, 6)); // Keep more logs visible
     };
 
     // --- VISUAL COMPONENTS (CSS PIXEL ART STYLE) ---
@@ -126,7 +126,7 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 {/* Shop at bottom */}
                 <div className="mt-auto w-full h-16 bg-[#1a202c] border-t-4 border-yellow-500 relative">
                     <div className="text-[8px] text-yellow-500 text-center mt-1 font-mono uppercase">
-                        {['Pawn Shop', 'Donuts', 'Market', 'Hotel'][type % 4]}
+                        {['Loja', 'Donuts', 'Mercado', 'Hotel'][type % 4]}
                     </div>
                 </div>
             </div>
@@ -137,42 +137,61 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
         return (
             <div 
                 onClick={() => handleStopCar(car)}
-                className="absolute bottom-10 w-32 h-14 cursor-pointer transition-transform hover:scale-105"
+                className="absolute bottom-10 w-36 h-16 cursor-pointer transition-transform hover:scale-105"
                 style={{ left: `${car.x}%` }}
             >
                 {/* Speech Bubble */}
-                <div className="absolute -top-12 left-0 bg-[#d6cfa2] text-black text-[8px] p-2 rounded-md border-2 border-black font-mono w-40 leading-tight z-20">
+                <div className="absolute -top-12 left-0 bg-[#d6cfa2] text-black text-[8px] p-2 rounded-md border-2 border-black font-mono w-40 leading-tight z-20 opacity-0 hover:opacity-100 transition-opacity">
                     {['Cadê a seta?!', 'Vou atrasar...', 'Olha o guarda!', 'Bip Bip!'][Math.floor(car.id % 4)]}
                     <div className="absolute bottom-[-4px] left-4 w-2 h-2 bg-[#d6cfa2] border-r-2 border-b-2 border-black transform rotate-45"></div>
                 </div>
 
-                {/* Car Body */}
+                {/* Car Body Container */}
                 <div className="w-full h-full relative">
-                    {/* Roof */}
-                    <div className="absolute top-0 left-4 w-20 h-6 rounded-t-lg z-10" style={{ backgroundColor: car.color }}></div>
+                    
+                    {/* Top/Roof */}
+                    <div className="absolute top-1 left-6 w-20 h-6 bg-black/20 z-0 rounded-t-lg skew-x-12"></div>
+                    <div className="absolute top-0 left-5 w-22 h-6 rounded-t-lg z-10" style={{ backgroundColor: car.color }}></div>
+                    
                     {/* Windows */}
-                    <div className="absolute top-1 left-5 w-18 h-4 bg-[#81e6d9] z-10"></div>
+                    <div className="absolute top-1 left-6 w-20 h-4 bg-[#81e6d9] z-10 flex">
+                        <div className="w-1/2 h-full border-r-2 border-black/20"></div>
+                    </div>
                     
                     {/* Main Body */}
-                    <div className="absolute top-5 left-0 w-32 h-8 rounded-md z-10 border-b-4 border-black/20" style={{ backgroundColor: car.color }}></div>
+                    <div className="absolute top-5 left-0 w-36 h-9 rounded-lg z-10 border-b-4 border-black/30 shadow-sm" style={{ backgroundColor: car.color }}>
+                        {/* Door handle */}
+                        <div className="absolute top-2 left-16 w-3 h-1 bg-black/30 rounded-full"></div>
+                    </div>
+
+                    {/* Headlights & Taillights */}
+                    <div className="absolute top-6 right-0 w-1 h-3 bg-yellow-200 rounded-l-sm z-20 shadow-[2px_0_5px_rgba(253,224,71,0.8)]"></div>
+                    <div className="absolute top-6 left-0 w-1 h-3 bg-red-600 rounded-r-sm z-20"></div>
+                    
+                    {/* Bumper */}
+                    <div className="absolute bottom-2 left-[-2px] w-[102%] h-2 bg-gray-700 rounded-sm z-10"></div>
                     
                     {/* Stripe for Taxi */}
                     {car.type === 'taxi' && (
-                        <div className="absolute top-8 left-0 w-32 h-2 bg-black/20 z-20 flex gap-1 px-1">
-                            {Array.from({length:10}).map((_,i) => <div key={i} className="w-2 h-full bg-yellow-300"></div>)}
+                        <div className="absolute top-8 left-0 w-36 h-2 bg-black/20 z-20 flex gap-1 px-1">
+                            {Array.from({length:12}).map((_,i) => <div key={i} className="w-2 h-full bg-yellow-300"></div>)}
                         </div>
                     )}
 
                     {/* Wheels */}
-                    <div className="absolute bottom-[-4px] left-4 w-6 h-6 bg-black rounded-full border-2 border-gray-500 z-20 animate-spin"></div>
-                    <div className="absolute bottom-[-4px] right-4 w-6 h-6 bg-black rounded-full border-2 border-gray-500 z-20 animate-spin"></div>
+                    <div className="absolute bottom-[-2px] left-5 w-7 h-7 bg-black rounded-full border-4 border-gray-600 z-20 flex items-center justify-center animate-spin">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div className="absolute bottom-[-2px] right-5 w-7 h-7 bg-black rounded-full border-4 border-gray-600 z-20 flex items-center justify-center animate-spin">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    </div>
                 </div>
             </div>
         );
     };
 
     return (
-        <div className="min-h-screen bg-[#1a202c] flex flex-col overflow-hidden font-mono">
+        <div className="min-h-screen bg-[#1a202c] flex flex-col overflow-hidden font-mono select-none">
             
             {/* --- SCENE (TOP 70%) --- */}
             <div className="flex-1 relative bg-gradient-to-b from-[#4a5568] to-[#2d3748] overflow-hidden border-b-8 border-black">
@@ -196,62 +215,63 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                     {cars.map(car => renderCar(car))}
 
                     {/* Pedestrian (Static for now) */}
-                    <div className="absolute bottom-24 left-1/2 w-4 h-8 bg-pink-500 rounded-sm z-0"></div>
+                    <div className="absolute bottom-24 left-1/2 w-4 h-8 bg-pink-500 rounded-sm z-0 animate-bounce"></div>
                 </div>
 
                 {/* Interaction Menu Overlay */}
                 {selectedCar && (
                     <div className="absolute top-1/2 right-10 transform -translate-y-1/2 w-48 bg-[#c0c0c0] border-4 border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-1 z-50">
                         <div className="bg-[#000080] text-white text-[10px] px-1 mb-1 flex justify-between">
-                            <span>POLICE MENU</span>
-                            <span onClick={() => setSelectedCar(null)} className="cursor-pointer">X</span>
+                            <span>MENU POLICIAL</span>
+                            <span onClick={() => setSelectedCar(null)} className="cursor-pointer font-bold">X</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                            <button onClick={() => handleAction('check_plate')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">CHECK PLATES</button>
-                            <button onClick={() => handleAction('check_lights')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">CHECK LIGHTS</button>
-                            <button onClick={() => handleAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">SEARCH CAR</button>
-                            <button onClick={() => handleAction('ticket')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">WRITE TICKET</button>
+                            <button onClick={() => handleAction('check_plate')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">VERIFICAR PLACA</button>
+                            <button onClick={() => handleAction('check_lights')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">CHECAR LUZES</button>
+                            <button onClick={() => handleAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">REVISTAR CARRO</button>
+                            <button onClick={() => handleAction('ticket')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">MULTAR</button>
                             <div className="h-1"></div>
-                            <button onClick={() => handleAction('release')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-red-900 text-[10px] font-bold py-2 px-1 text-center active:border-t-gray-500 active:border-l-gray-500">RELEASE</button>
+                            <button onClick={() => handleAction('release')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-red-900 text-[10px] font-bold py-2 px-1 text-center active:border-t-gray-500 active:border-l-gray-500">LIBERAR</button>
                         </div>
                     </div>
                 )}
             </div>
 
             {/* --- DASHBOARD (BOTTOM 30%) --- */}
-            <div className="h-40 bg-[#111] relative border-t-4 border-[#333] p-4 flex items-center justify-between">
+            <div className="h-48 bg-[#111] relative border-t-4 border-[#333] p-4 flex items-center justify-between">
                 {/* Texture */}
                 <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '4px 4px' }}></div>
 
-                {/* Radio */}
-                <div className="w-1/3 h-full bg-[#222] rounded-lg border-2 border-[#444] p-2 relative flex flex-col">
+                {/* Radio - INCREASED SIZE */}
+                <div className="w-5/12 h-full bg-[#222] rounded-lg border-2 border-[#444] p-2 relative flex flex-col">
                     <div className="w-full h-2 bg-black mb-1"></div> {/* Speaker grill */}
                     <div className="w-full h-2 bg-black mb-2"></div> 
-                    <div className="bg-[#2d4f2d] text-[#4ade80] font-mono text-[10px] p-2 h-12 overflow-hidden leading-tight border-2 border-[#111] inset-shadow">
-                        {actionLog.map((log, i) => <div key={i}>{`> ${log}`}</div>)}
+                    <div className="bg-[#2d4f2d] text-[#4ade80] font-mono text-[10px] p-2 flex-1 overflow-hidden leading-tight border-2 border-[#111] inset-shadow relative">
+                        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/pixel-weave.png')]"></div>
+                        {actionLog.map((log, i) => <div key={i} className="mb-1 border-b border-[#4ade80]/20 pb-1">{`> ${log}`}</div>)}
                     </div>
-                    <div className="absolute -top-10 right-2 w-2 h-20 bg-gray-400"></div> {/* Antenna */}
+                    <div className="absolute -top-10 right-2 w-1 h-20 bg-gray-400"></div> {/* Antenna */}
                     <div className="absolute bottom-2 right-2 text-gray-500 text-[8px] flex items-center gap-1">
-                        <Radio size={12} /> MOTORULEZ
+                        <Radio size={12} /> RÁDIO COP
                     </div>
                 </div>
 
                 {/* Steering Wheel / Center */}
-                <div className="w-1/3 h-full flex flex-col items-center justify-end">
-                    <div className="w-32 h-32 rounded-full border-[12px] border-[#222] border-b-0 translate-y-12 shadow-xl"></div>
+                <div className="w-2/12 h-full flex flex-col items-center justify-end">
+                    <div className="w-32 h-32 rounded-full border-[12px] border-[#222] border-b-0 translate-y-12 shadow-xl bg-[#1a1a1a]"></div>
                 </div>
 
                 {/* Watch / Computer */}
-                <div className="w-1/3 h-full bg-[#222] rounded-lg border-2 border-[#444] p-2 flex flex-col items-center justify-center relative">
+                <div className="w-4/12 h-full bg-[#222] rounded-lg border-2 border-[#444] p-2 flex flex-col items-center justify-center relative">
                     <div className="bg-[#9ca3af] w-full h-full rounded border-4 border-[#4b5563] p-2 flex flex-col items-center justify-center relative shadow-inner">
                         {/* Digital Watch Face */}
-                        <div className="bg-[#8da399] w-full h-16 border-2 border-gray-600 font-mono flex items-center justify-center text-2xl tracking-widest text-black/80 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.2)]">
+                        <div className="bg-[#8da399] w-full h-12 border-2 border-gray-600 font-mono flex items-center justify-center text-2xl tracking-widest text-black/80 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.2)] mb-2">
                             {shiftTime} <span className="text-[10px] ml-1 mt-2">AM</span>
                         </div>
                         
                         {/* Tickets Count */}
-                        <div className="w-full bg-[#fef3c7] mt-2 p-1 border border-gray-400 text-[10px] font-bold text-center font-serif -rotate-1 shadow-sm">
-                            TICKETS: {ticketsIssued}
+                        <div className="w-full bg-[#fef3c7] p-2 border border-gray-400 text-[12px] font-bold text-center font-serif -rotate-1 shadow-sm">
+                            MULTAS: {ticketsIssued}
                         </div>
                     </div>
                     <div className="absolute bottom-1 right-2 text-[6px] text-white opacity-50">ZIBRA SECURITY</div>
