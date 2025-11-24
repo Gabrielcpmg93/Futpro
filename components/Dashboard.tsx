@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic, Siren } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
@@ -113,7 +113,24 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
          </div>
       </button>
 
-      {/* Press Conference (Imprensa) Button - NEW */}
+      {/* Police Mode (Modo Policia) - NEW */}
+      <button 
+        onClick={() => onNavigate(ScreenState.POLICE_MODE)}
+        className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 group active:scale-95 transition-all hover:bg-slate-50"
+      >
+         <div className="bg-blue-900 p-2 rounded-xl text-white">
+            <Siren size={20} />
+         </div>
+         <div className="text-left">
+            <p className="text-sm font-bold text-slate-800">Modo Polícia</p>
+            <p className="text-xs text-slate-400">Patrulhe as ruas e multe infratores</p>
+         </div>
+         <div className="ml-auto bg-slate-50 p-2 rounded-full">
+            <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-900" />
+         </div>
+      </button>
+
+      {/* Press Conference (Imprensa) Button */}
       <button 
         onClick={() => onNavigate(ScreenState.PRESS_CONFERENCE)}
         className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 group active:scale-95 transition-all hover:bg-slate-50"

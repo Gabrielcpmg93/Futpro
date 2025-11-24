@@ -18,6 +18,7 @@ import YouthAcademyView from './components/YouthAcademyView';
 import CalendarView from './components/CalendarView';
 import CityBuilderView from './components/CityBuilderView';
 import PressConferenceView from './components/PressConferenceView';
+import PoliceModeView from './components/PoliceModeView';
 import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
@@ -236,6 +237,10 @@ const App: React.FC = () => {
             lastMatchData={lastMatchData}
             onBack={() => setCurrentScreen(ScreenState.HOME)} 
           />
+      )}
+
+      {currentScreen === ScreenState.POLICE_MODE && (
+          <PoliceModeView onBack={() => setCurrentScreen(ScreenState.HOME)} />
       )}
     </Layout>
   );
