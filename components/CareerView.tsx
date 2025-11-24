@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Team, Position } from '../types';
 import { SERIE_A_MAPPING } from '../services/geminiService';
-import { Star, ArrowRight, Play, ArrowLeft, Zap, Activity, ChevronRight, ChevronLeft, RotateCw, RotateCcw } from 'lucide-react';
+import { Star, ArrowRight, Play, ArrowLeft, Zap, Activity, ChevronRight, ChevronLeft, RotateCw, RotateCcw, RefreshCcw } from 'lucide-react';
 import MatchView from './MatchView';
 
 interface CareerViewProps {
@@ -12,8 +12,8 @@ interface CareerViewProps {
 }
 
 const HAIR_COLORS = ['#1a1a1a', '#4b2e18', '#b45309', '#facc15', '#a3a3a3', '#fafafa'];
-const BEARD_COLORS = ['#1a1a1a', '#4b2e18', '#b45309', '#a3a3a3'];
-const SKIN_TONES = ['#f5d0b0', '#e0ac69', '#aa724b', '#5c3a21'];
+const BEARD_COLORS = ['#1a1a1a', '#4b2e18', '#b45309', '#a3a3a3', '#fafafa'];
+const SKIN_TONES = ['#f5d0b0', '#e0ac69', '#aa724b', '#8d5524', '#5c3a21', '#3b2516'];
 
 const HAIR_STYLES = ['Careca', 'Curto', 'Moicano', 'Tigela', 'Longo'];
 const BEARD_STYLES = ['Sem Barba', 'Cavanhaque', 'Barba Cheia', 'Bigode'];
@@ -32,7 +32,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
     const [beardStyle, setBeardStyle] = useState(0);
     const [beardColor, setBeardColor] = useState(BEARD_COLORS[0]);
     const [skinTone, setSkinTone] = useState(SKIN_TONES[1]);
-    const [avatarRotation, setAvatarRotation] = useState(0); // New Rotation State
+    const [avatarRotation, setAvatarRotation] = useState(0); 
     
     // Season Stats
     const [gamesPlayed, setGamesPlayed] = useState(0);
@@ -119,16 +119,22 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
     // --- VOXEL AVATAR RENDERER ---
     const renderAvatar = () => {
         return (
-            <div className="relative w-40 h-48 mx-auto mb-2" style={{ perspective: '600px' }}>
+            <div className="relative w-40 h-52 mx-auto mb-2 flex items-center justify-center" style={{ perspective: '600px' }}>
                 <div 
-                    className="w-full h-full relative transition-transform duration-500 ease-out"
+                    className="w-full h-full relative transition-transform duration-300 ease-out transform-style-3d"
                     style={{ 
-                        transformStyle: 'preserve-3d', 
                         transform: `rotateY(${avatarRotation}deg)` 
                     }}
                 >
                     {/* HEAD GROUP */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-20 bg-amber-200 z-20 shadow-md" style={{ backgroundColor: skinTone, transform: 'translateZ(10px)' }}>
+                    <div 
+                        className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-20 z-20 shadow-md rounded-sm" 
+                        style={{ backgroundColor: skinTone, transform: 'translateZ(10px)' }}
+                    >
+                        {/* Ears (For rotation depth) */}
+                        <div className="absolute top-8 -left-2 w-2 h-6 rounded-l-md" style={{ backgroundColor: skinTone }}></div>
+                        <div className="absolute top-8 -right-2 w-2 h-6 rounded-r-md" style={{ backgroundColor: skinTone }}></div>
+
                         {/* Hair */}
                         {hairStyle === 1 && <div className="absolute top-0 w-full h-4 z-30" style={{ backgroundColor: hairColor }}></div>} {/* Curto */}
                         {hairStyle === 2 && <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-6 h-8 z-30" style={{ backgroundColor: hairColor }}></div>} {/* Moicano */}
@@ -143,20 +149,26 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                         <div className="absolute top-6 right-3 w-4 h-1 bg-black/50 z-30"></div>
                         
                         {/* Beard */}
-                        {beardStyle === 1 && <div className="absolute bottom-0 w-full h-6 bg-black/20 z-20" style={{ backgroundColor: beardColor, opacity: 0.5 }}></div>} {/* Stubble */}
-                        {beardStyle === 2 && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-4 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Goatee */}
-                        {beardStyle === 3 && <div className="absolute bottom-0 w-full h-8 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Full */}
-                        {beardStyle === 4 && <div className="absolute top-12 left-1/2 -translate-x-1/2 w-10 h-2 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Mustache */}
+                        {beardStyle === 1 && <div className="absolute bottom-0 w-full h-6 z-20 opacity-30" style={{ backgroundColor: beardColor }}></div>} {/* Stubble */}
+                        {beardStyle === 2 && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-4 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Cavanhaque */}
+                        {beardStyle === 3 && <div className="absolute bottom-0 w-full h-8 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Cheia */}
+                        {beardStyle === 4 && <div className="absolute top-11 left-1/2 -translate-x-1/2 w-12 h-2 z-20" style={{ backgroundColor: beardColor }}></div>} {/* Bigode */}
 
                         {/* Mouth (Smile) */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-1 bg-red-900/50 z-20"></div>
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-4 h-1 bg-red-900/50 z-20"></div>
                         
                         {/* Back of Head (Hair) */}
                          <div className="absolute top-0 left-0 w-full h-full -z-10" style={{ backgroundColor: hairColor, transform: 'translateZ(-21px)' }}></div>
                     </div>
+                    
+                    {/* NECK */}
+                    <div 
+                        className="absolute top-20 left-1/2 -translate-x-1/2 w-8 h-4 z-10"
+                        style={{ backgroundColor: skinTone, transform: 'translateZ(5px)' }}
+                    ></div>
 
                     {/* BODY GROUP */}
-                    <div className="absolute top-20 left-1/2 -translate-x-1/2 w-24 h-20 z-10 flex shadow-md" style={{ transform: 'translateZ(5px)' }}>
+                    <div className="absolute top-24 left-1/2 -translate-x-1/2 w-24 h-20 z-10 flex shadow-md" style={{ transform: 'translateZ(5px)' }}>
                         {/* Left Side Red */}
                         <div className="w-1/2 h-full bg-[#ef4444] relative">
                              <div className="absolute top-4 left-2 text-[6px] text-white font-bold opacity-80">M</div>
@@ -177,13 +189,13 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                     </div>
 
                     {/* SHORTS */}
-                    <div className="absolute top-40 left-1/2 -translate-x-1/2 w-20 h-10 bg-[#3b82f6] z-10 flex" style={{ transform: 'translateZ(5px)' }}>
+                    <div className="absolute top-44 left-1/2 -translate-x-1/2 w-20 h-10 bg-[#3b82f6] z-10 flex" style={{ transform: 'translateZ(5px)' }}>
                         <div className="w-1/2 h-full border-r border-blue-700"></div>
                         <div className="w-1/2 h-full"></div>
                     </div>
 
                     {/* LEGS */}
-                    <div className="absolute top-48 left-1/2 -translate-x-1/2 w-20 h-12 z-0 flex justify-between px-1" style={{ transform: 'translateZ(5px)' }}>
+                    <div className="absolute top-52 left-1/2 -translate-x-1/2 w-20 h-12 z-0 flex justify-between px-1" style={{ transform: 'translateZ(5px)' }}>
                         <div className="w-6 h-full bg-blue-700 rounded-b-sm border-b-4 border-[#ef4444]"></div> {/* Left Sock */}
                         <div className="w-6 h-full bg-blue-700 rounded-b-sm border-b-4 border-[#ef4444]"></div> {/* Right Sock */}
                     </div>
@@ -203,15 +215,34 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                     <div className="w-full max-w-sm animate-in zoom-in pb-10">
                         <h2 className="text-2xl font-bold text-center mb-6 text-yellow-400">Crie seu Craque</h2>
                         
-                        {/* Avatar Preview */}
-                        <div className="bg-white/10 p-6 rounded-3xl mb-6 backdrop-blur-sm border border-white/10 relative">
-                             {renderAvatar()}
+                        {/* Avatar Preview & Controls */}
+                        <div className="bg-white/10 p-6 rounded-3xl mb-6 backdrop-blur-sm border border-white/10 relative overflow-hidden">
                              
-                             {/* Rotation Controls */}
-                             <div className="flex justify-center gap-4 mt-4">
-                                <button onClick={() => setAvatarRotation(r => r - 45)} className="p-2 bg-violet-800 rounded-full hover:bg-violet-700"><RotateCcw size={20} /></button>
-                                <button onClick={() => setAvatarRotation(r => r + 45)} className="p-2 bg-violet-800 rounded-full hover:bg-violet-700"><RotateCw size={20} /></button>
-                             </div>
+                             {/* Rotation Buttons - Left/Right Sides */}
+                             <button 
+                                onClick={() => setAvatarRotation(r => r - 45)} 
+                                className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-black/30 rounded-full hover:bg-black/50 z-50 transition-colors"
+                             >
+                                 <ChevronLeft size={24} />
+                             </button>
+                             
+                             <button 
+                                onClick={() => setAvatarRotation(r => r + 45)} 
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-black/30 rounded-full hover:bg-black/50 z-50 transition-colors"
+                             >
+                                 <ChevronRight size={24} />
+                             </button>
+
+                             {/* Reset Rotation */}
+                             <button 
+                                onClick={() => setAvatarRotation(0)}
+                                className="absolute top-2 right-2 p-2 text-white/50 hover:text-white z-50"
+                                title="Reset Rotation"
+                             >
+                                 <RefreshCcw size={16} />
+                             </button>
+
+                             {renderAvatar()}
                         </div>
 
                         {/* Name Input */}
@@ -228,62 +259,67 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
 
                         {/* Customization Controls */}
                         <div className="space-y-4 bg-violet-800/50 p-4 rounded-2xl border border-violet-700 mb-6">
+                            
                             {/* Skin Tone */}
                             <div>
                                 <div className="flex justify-between mb-2">
                                     <span className="text-xs font-bold text-violet-300">Tom de Pele</span>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 justify-center">
                                     {SKIN_TONES.map(color => (
                                         <button 
                                             key={color}
                                             onClick={() => setSkinTone(color)}
-                                            className={`w-8 h-8 rounded-full border-2 transition-transform ${skinTone === color ? 'border-white scale-110' : 'border-transparent opacity-70'}`}
+                                            className={`w-10 h-10 rounded-full border-4 transition-transform ${skinTone === color ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                             style={{ backgroundColor: color }}
                                         />
                                     ))}
                                 </div>
                             </div>
 
+                            <div className="h-[1px] bg-white/10 my-2"></div>
+
                             {/* Hair Style */}
                             <div className="flex items-center justify-between bg-violet-900/50 p-2 rounded-xl">
-                                <button onClick={() => setHairStyle(prev => (prev === 0 ? HAIR_STYLES.length - 1 : prev - 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20}/></button>
-                                <div className="text-center">
-                                    <span className="text-xs text-violet-400 block">Cabelo</span>
-                                    <span className="font-bold">{HAIR_STYLES[hairStyle]}</span>
+                                <button onClick={() => setHairStyle(prev => (prev === 0 ? HAIR_STYLES.length - 1 : prev - 1))} className="p-3 bg-violet-800 rounded-lg hover:bg-violet-700"><ChevronLeft size={20}/></button>
+                                <div className="text-center w-32">
+                                    <span className="text-xs text-violet-400 block uppercase tracking-wider">Cabelo</span>
+                                    <span className="font-bold text-lg">{HAIR_STYLES[hairStyle]}</span>
                                 </div>
-                                <button onClick={() => setHairStyle(prev => (prev === HAIR_STYLES.length - 1 ? 0 : prev + 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20}/></button>
+                                <button onClick={() => setHairStyle(prev => (prev === HAIR_STYLES.length - 1 ? 0 : prev + 1))} className="p-3 bg-violet-800 rounded-lg hover:bg-violet-700"><ChevronRight size={20}/></button>
                             </div>
 
                              {/* Hair Color */}
-                             <div className="flex gap-2 justify-center pb-2 border-b border-white/10">
+                             <div className="flex gap-2 justify-center py-2">
                                 {HAIR_COLORS.map(color => (
                                     <button 
                                         key={color}
                                         onClick={() => setHairColor(color)}
-                                        className={`w-6 h-6 rounded-full border-2 transition-transform ${hairColor === color ? 'border-white scale-110' : 'border-transparent opacity-50'}`}
+                                        className={`w-8 h-8 rounded-full border-4 transition-transform ${hairColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                         style={{ backgroundColor: color }}
                                     />
                                 ))}
                             </div>
 
+                            <div className="h-[1px] bg-white/10 my-2"></div>
+
                             {/* Beard Style */}
                             <div className="flex items-center justify-between bg-violet-900/50 p-2 rounded-xl">
-                                <button onClick={() => setBeardStyle(prev => (prev === 0 ? BEARD_STYLES.length - 1 : prev - 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20}/></button>
-                                <div className="text-center">
-                                    <span className="text-xs text-violet-400 block">Barba</span>
-                                    <span className="font-bold">{BEARD_STYLES[beardStyle]}</span>
+                                <button onClick={() => setBeardStyle(prev => (prev === 0 ? BEARD_STYLES.length - 1 : prev - 1))} className="p-3 bg-violet-800 rounded-lg hover:bg-violet-700"><ChevronLeft size={20}/></button>
+                                <div className="text-center w-32">
+                                    <span className="text-xs text-violet-400 block uppercase tracking-wider">Barba</span>
+                                    <span className="font-bold text-lg">{BEARD_STYLES[beardStyle]}</span>
                                 </div>
-                                <button onClick={() => setBeardStyle(prev => (prev === BEARD_STYLES.length - 1 ? 0 : prev + 1))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20}/></button>
+                                <button onClick={() => setBeardStyle(prev => (prev === BEARD_STYLES.length - 1 ? 0 : prev + 1))} className="p-3 bg-violet-800 rounded-lg hover:bg-violet-700"><ChevronRight size={20}/></button>
                             </div>
 
                              {/* Beard Color */}
-                             <div className="flex gap-2 justify-center">
+                             <div className="flex gap-2 justify-center py-2">
                                 {BEARD_COLORS.map(color => (
                                     <button 
                                         key={color}
                                         onClick={() => setBeardColor(color)}
-                                        className={`w-6 h-6 rounded-full border-2 transition-transform ${beardColor === color ? 'border-white scale-110' : 'border-transparent opacity-50'}`}
+                                        className={`w-8 h-8 rounded-full border-4 transition-transform ${beardColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                         style={{ backgroundColor: color }}
                                     />
                                 ))}
@@ -293,7 +329,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                         <button onClick={handleCreate} className="w-full bg-yellow-400 hover:bg-yellow-300 text-violet-900 font-bold py-4 rounded-xl transition-colors shadow-lg shadow-yellow-400/20 text-lg">
                             Iniciar Carreira
                         </button>
-                        <button onClick={onCancel} className="w-full mt-4 text-violet-400 text-sm font-medium py-2">Cancelar</button>
+                        <button onClick={onCancel} className="w-full mt-4 text-violet-400 text-sm font-medium py-2 hover:text-white transition-colors">Cancelar</button>
                     </div>
                 </div>
             )}
@@ -351,7 +387,7 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                     <div className="p-6 bg-gradient-to-b from-violet-900 to-slate-900 pb-10">
                          <div className="flex items-center gap-4 mb-6">
                              {/* Mini Voxel Head for Hub */}
-                             <div className="w-16 h-16 bg-amber-200 rounded-xl overflow-hidden relative border-2 border-white/20" style={{ backgroundColor: skinTone }}>
+                             <div className="w-16 h-16 rounded-xl overflow-hidden relative border-2 border-white/20" style={{ backgroundColor: skinTone }}>
                                  {hairStyle === 1 && <div className="absolute top-0 w-full h-3" style={{ backgroundColor: hairColor }}></div>}
                                  {hairStyle === 2 && <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-6" style={{ backgroundColor: hairColor }}></div>}
                                  {hairStyle === 3 && <div className="absolute top-0 w-full h-6 rounded-t-md" style={{ backgroundColor: hairColor }}></div>}
@@ -359,7 +395,11 @@ const CareerView: React.FC<CareerViewProps> = ({ onComplete, onCancel, onWinTrop
                                  
                                  <div className="absolute top-6 left-3 w-1.5 h-1.5 bg-black"></div>
                                  <div className="absolute top-6 right-3 w-1.5 h-1.5 bg-black"></div>
-                                 {beardStyle !== 0 && <div className="absolute bottom-0 w-full h-4 opacity-50" style={{ backgroundColor: beardColor }}></div>}
+                                 
+                                 {beardStyle === 1 && <div className="absolute bottom-0 w-full h-3 opacity-30" style={{ backgroundColor: beardColor }}></div>}
+                                 {beardStyle === 2 && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-2" style={{ backgroundColor: beardColor }}></div>}
+                                 {beardStyle === 3 && <div className="absolute bottom-0 w-full h-4" style={{ backgroundColor: beardColor }}></div>}
+                                 {beardStyle === 4 && <div className="absolute top-9 left-1/2 -translate-x-1/2 w-6 h-1.5" style={{ backgroundColor: beardColor }}></div>}
                              </div>
 
                              <div>
