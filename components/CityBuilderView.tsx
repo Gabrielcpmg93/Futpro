@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, memo } from 'react';
-import { ArrowLeft, Home, Building2, MousePointer2, Hammer, Car, User, CarFront } from 'lucide-react';
+import { ArrowLeft, Home, Building2, Hammer, Car, User, CarFront, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface CityBuilderViewProps {
   onBack: () => void;
@@ -142,7 +142,7 @@ const CityGrid = memo(({ grid, onTileClick }: { grid: TileType[][], onTileClick:
             style={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(${grid.length}, 1fr)`,
-                width: '1000px', // Large fixed width to allow scrolling and high detail
+                width: '1000px', // Large fixed width to allow high detail
                 height: '1000px',
                 gap: '0px'
             }}
@@ -166,6 +166,10 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
   const [grid, setGrid] = useState<TileType[][]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedTool, setSelectedTool] = useState<TileType | 'bulldoze' | 'add-car' | 'add-pedestrian'>('road');
+  
+  // Zoom State
+  const [zoom, setZoom] = useState(1.0);
+  const touchDistRef = useRef<number | null>(null);
   
   const gridRef = useRef<TileType[][]>([]);
 
@@ -209,6 +213,40 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
           SAVED_ENTITIES = entities;
       }
   }, [grid, entities]);
+
+  // --- ZOOM GESTURE HANDLERS ---
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchDistRef.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchDistRef.current !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      
+      const delta = dist - touchDistRef.current;
+      // Sensitivity factor 0.005 for smooth zoom
+      setZoom(prev => Math.min(3, Math.max(0.5, prev + delta * 0.005)));
+      
+      touchDistRef.current = dist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchDistRef.current = null;
+  };
+
+  const handleZoom = (change: number) => {
+      setZoom(prev => Math.min(3, Math.max(0.5, prev + change)));
+  }
 
   // --- SIMULATION LOOP ---
   useEffect(() => {
@@ -457,16 +495,50 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
       </div>
 
       {/* Map Area with Scroll */}
-      <div className="flex-1 overflow-auto bg-[#86efac] relative shadow-inner cursor-grab active:cursor-grabbing">
-          <div className="min-w-fit min-h-fit p-10 flex items-center justify-center">
+      <div 
+        className="flex-1 overflow-auto bg-[#86efac] relative shadow-inner cursor-grab active:cursor-grabbing touch-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+          {/* Zoom Controls */}
+          <div className="fixed top-20 right-4 z-40 flex flex-col gap-2">
+               <button 
+                onClick={() => handleZoom(0.5)}
+                className="p-3 bg-white rounded-full shadow-lg border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all text-slate-700"
+               >
+                   <ZoomIn size={20} />
+               </button>
+               <button 
+                onClick={() => handleZoom(-0.5)}
+                className="p-3 bg-white rounded-full shadow-lg border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all text-slate-700"
+               >
+                   <ZoomOut size={20} />
+               </button>
+          </div>
+
+          <div 
+            className="min-w-fit min-h-fit p-10 flex items-center justify-center transition-all duration-100 origin-top-left"
+            style={{
+                 width: `${1000 * zoom + 80}px`, // Padding included in scroll width calculation
+                 height: `${1000 * zoom + 80}px`
+            }}
+          >
               <div 
-                className="bg-[#22c55e] p-4 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-8 border-[#15803d] relative"
+                className="bg-[#22c55e] border-8 border-[#15803d] relative shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
+                style={{ 
+                    transform: `scale(${zoom})`, 
+                    transformOrigin: 'top left',
+                    width: '1000px',
+                    height: '1000px',
+                    willChange: 'transform' // GPU hint
+                }}
               >
                   {/* Rendering Optimized Grid */}
                   <CityGrid grid={grid} onTileClick={handleTileClick} />
 
                   {/* Entity Layer (Overlay) */}
-                  <div className="absolute inset-4 pointer-events-none">
+                  <div className="absolute inset-0 pointer-events-none">
                       {renderEntities()}
                   </div>
               </div>
