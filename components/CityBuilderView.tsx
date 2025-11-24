@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef, memo } from 'react';
-import { ArrowLeft, Home, Building2, Hammer, Car, User, CarFront, ZoomIn, ZoomOut } from 'lucide-react';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { ArrowLeft, Home, Building2, Hammer, Car, User, CarFront, ZoomIn, ZoomOut, Trophy } from 'lucide-react';
 
 interface CityBuilderViewProps {
   onBack: () => void;
@@ -10,7 +10,7 @@ interface CityBuilderViewProps {
 let SAVED_CITY_GRID: TileType[][] | null = null;
 let SAVED_ENTITIES: Entity[] | null = null;
 
-type TileType = 'grass' | 'road' | 'house' | 'commerce';
+type TileType = 'grass' | 'road' | 'house' | 'commerce' | 'club';
 type EntityType = 'car' | 'pedestrian';
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
@@ -43,7 +43,6 @@ const getTileStyle = (grid: TileType[][], type: TileType, r: number, c: number) 
          const isolated = !top && !bottom && !left && !right;
 
          // WIDER ROADS & SIDEWALKS
-         // Road is now 60% of the tile (bigger asphalt), leaving 20% sidewalk on each side.
          const roadWidthClass = "w-[60%]";
          const roadHeightClass = "h-[60%]";
 
@@ -81,6 +80,31 @@ const getTileStyle = (grid: TileType[][], type: TileType, r: number, c: number) 
                  </div>
              </div>
          );
+    }
+
+    if (type === 'club') {
+        return (
+            <div className="w-full h-full relative bg-stone-300 p-[2px]">
+                 {/* Stadium Structure */}
+                <div className="w-full h-full bg-slate-200 border border-slate-400 relative shadow-md flex items-center justify-center transition-transform hover:-translate-y-0.5">
+                    {/* The Pitch */}
+                     <div className="w-[85%] h-[75%] bg-[#22c55e] relative border border-white/50 overflow-hidden shadow-inner">
+                        {/* Halfway line */}
+                        <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/60 -translate-y-1/2"></div>
+                        {/* Center Circle */}
+                         <div className="absolute top-1/2 left-1/2 w-[30%] h-[30%] border border-white/60 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                         {/* Goals */}
+                         <div className="absolute top-0 left-1/2 w-[30%] h-[15%] border-b border-x border-white/60 -translate-x-1/2"></div>
+                         <div className="absolute bottom-0 left-1/2 w-[30%] h-[15%] border-t border-x border-white/60 -translate-x-1/2"></div>
+                     </div>
+                     {/* Roof/Stands Detail */}
+                     <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-700 border-b border-blue-900"></div>
+                     <div className="absolute bottom-0 left-0 w-full h-1.5 bg-blue-700 border-t border-blue-900"></div>
+                     <div className="absolute left-0 top-0 h-full w-1 bg-blue-700"></div>
+                     <div className="absolute right-0 top-0 h-full w-1 bg-blue-700"></div>
+                </div>
+            </div>
+        );
     }
 
     if (type === 'house') {
@@ -345,11 +369,6 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
                        if (Math.random() < 0.5 && validMoves.length > 0) {
                            const move = validMoves[Math.floor(Math.random() * validMoves.length)];
                            
-                           // Determine new sidewalk side based on move direction
-                           // If moving vertically (UP/DOWN), they should be on Left (3) or Right (1) side
-                           // If moving horizontally (LEFT/RIGHT), they should be on Top (0) or Bottom (2) side
-                           // BUT to keep it simple and ensure they don't clip, we keep their side unless they turn corner.
-                           
                            return { 
                                ...entity, 
                                r: r + move.dr, 
@@ -366,9 +385,24 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
       return () => clearInterval(interval);
   }, []);
 
-  const handleTileClick = (rowIndex: number, colIndex: number) => {
+  // Optimized Handler:
+  // We use functional state updates and Refs to avoid adding 'grid' or 'entities' as dependencies.
+  // This prevents the CityGrid (Memo) from re-rendering every time the simulation tick runs (entities update).
+  const handleTileClick = useCallback((rowIndex: number, colIndex: number) => {
+    // We can't access 'selectedTool' directly without causing re-renders when tool changes (which is fine)
+    // BUT we must avoid 'entities' and 'grid' dependencies.
+    
+    // Access current grid state via Ref to check validity without dependency
+    const currentGrid = gridRef.current;
+
+    // We can't easily access 'selectedTool' inside useCallback without dependency unless we use a ref for it too, 
+    // but tool changes are rare, so it's okay to depend on selectedTool.
+    // The main optimization is removing 'entities' dependency.
+
+    // NOTE: We're reading selectedTool from the closure.
+    
     if (selectedTool === 'add-car') {
-        if (grid[rowIndex][colIndex] !== 'road') {
+        if (currentGrid[rowIndex][colIndex] !== 'road') {
             alert("Carros só podem ser colocados na rua!");
             return;
         }
@@ -380,12 +414,12 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
             dir: ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random()*4)] as Direction,
             color: ['#ef4444', '#3b82f6', '#eab308', '#000000', '#ffffff', '#8b5cf6'][Math.floor(Math.random()*6)]
         };
-        setEntities([...entities, newCar]);
+        setEntities(prev => [...prev, newCar]);
         return;
     }
 
     if (selectedTool === 'add-pedestrian') {
-         if (grid[rowIndex][colIndex] !== 'road') {
+         if (currentGrid[rowIndex][colIndex] !== 'road') {
             alert("Pedestres devem ser colocados na calçada!");
             return;
         }
@@ -398,24 +432,29 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
             color: ['#f87171', '#60a5fa', '#a78bfa', '#fbbf24', '#34d399'][Math.floor(Math.random()*5)],
             sideWalkSide: Math.floor(Math.random() * 4) // 0=Top, 1=Right, 2=Bottom, 3=Left
         };
-        setEntities([...entities, newPed]);
+        setEntities(prev => [...prev, newPed]);
         return;
     }
 
-    const newGrid = [...grid.map(row => [...row])];
-    
-    if (selectedTool === 'bulldoze') {
-        newGrid[rowIndex][colIndex] = 'grass';
-        setEntities(entities.filter(e => e.r !== rowIndex || e.c !== colIndex));
-    } else {
-        if (selectedTool !== 'road') {
-             setEntities(entities.filter(e => e.r !== rowIndex || e.c !== colIndex));
+    // Modify Grid
+    setGrid(prevGrid => {
+        const newGrid = prevGrid.map(row => [...row]);
+        
+        if (selectedTool === 'bulldoze') {
+            newGrid[rowIndex][colIndex] = 'grass';
+            // Also remove entities on this tile
+            setEntities(prevEntities => prevEntities.filter(e => e.r !== rowIndex || e.c !== colIndex));
+        } else {
+            // Remove entities if replacing road with something else
+            if (selectedTool !== 'road') {
+                setEntities(prevEntities => prevEntities.filter(e => e.r !== rowIndex || e.c !== colIndex));
+            }
+            newGrid[rowIndex][colIndex] = selectedTool;
         }
-        newGrid[rowIndex][colIndex] = selectedTool;
-    }
+        return newGrid;
+    });
     
-    setGrid(newGrid);
-  };
+  }, [selectedTool]); // Only depends on selectedTool. Grid and Entities are handled via refs/functional updates.
 
   const renderEntities = () => {
       const cellSize = 100 / GRID_SIZE; 
@@ -461,22 +500,15 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
           }
 
           if (entity.type === 'pedestrian') {
-              // LOGIC TO KEEP PEDESTRIANS ON GRAY SIDEWALK
-              // Road is now 60% wide in center (20% to 80%).
-              // Sidewalks are 0-20% and 80-100%.
-              // We offset them from center (50%) to these edges (10% or 90%).
-              // 40% offset from center pushes them to the 10% or 90% mark.
-              
               let offsetX = 0;
               let offsetY = 0;
               const side = entity.sideWalkSide || 0;
-              
-              const OFFSET_VAL = 40; // Percentage to move away from center
+              const OFFSET_VAL = 40; 
 
-              if (side === 0) offsetY = -OFFSET_VAL; // Top
-              if (side === 1) offsetX = OFFSET_VAL;  // Right
-              if (side === 2) offsetY = OFFSET_VAL;  // Bottom
-              if (side === 3) offsetX = -OFFSET_VAL; // Left
+              if (side === 0) offsetY = -OFFSET_VAL; 
+              if (side === 1) offsetX = OFFSET_VAL; 
+              if (side === 2) offsetY = OFFSET_VAL; 
+              if (side === 3) offsetX = -OFFSET_VAL;
 
               return (
                   <div 
@@ -494,7 +526,6 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
                         style={{ 
                             transform: `translate(${offsetX}%, ${offsetY}%)`,
                             animationDuration: '0.8s',
-                            // Scale down pedestrian slightly so they fit on the 20% sidewalk strip
                             scale: '0.8' 
                         }}
                       >
@@ -610,6 +641,14 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
               >
                   <Building2 size={20} />
                   <span className="text-[10px] font-bold">Loja</span>
+              </button>
+
+              <button 
+                onClick={() => setSelectedTool('club')}
+                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-b-4 transition-all active:scale-95 min-w-[4rem] ${selectedTool === 'club' ? 'border-emerald-600 bg-emerald-600 text-white shadow-lg transform -translate-y-1' : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+              >
+                  <Trophy size={20} />
+                  <span className="text-[10px] font-bold">Clube</span>
               </button>
 
               <div className="w-[1px] bg-slate-200 mx-1"></div>
