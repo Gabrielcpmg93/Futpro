@@ -169,7 +169,12 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
   
   // Zoom State
   const [zoom, setZoom] = useState(1.0);
+  
+  // Refs for gesture handling
   const touchDistRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{ x: number, y: number } | null>(null);
+  const scrollStartRef = useRef<{ left: number, top: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const gridRef = useRef<TileType[][]>([]);
 
@@ -214,34 +219,54 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
       }
   }, [grid, entities]);
 
-  // --- ZOOM GESTURE HANDLERS ---
+  // --- ZOOM & PAN GESTURE HANDLERS ---
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      // Pinch to Zoom Start
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       touchDistRef.current = dist;
+    } else if (e.touches.length === 1 && containerRef.current) {
+        // Pan Start
+        touchStartRef.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        };
+        scrollStartRef.current = {
+            left: containerRef.current.scrollLeft,
+            top: containerRef.current.scrollTop
+        };
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && touchDistRef.current !== null) {
+      // Pinch to Zoom Move
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       
       const delta = dist - touchDistRef.current;
-      // Sensitivity factor 0.005 for smooth zoom
       setZoom(prev => Math.min(3, Math.max(0.5, prev + delta * 0.005)));
-      
       touchDistRef.current = dist;
+    } else if (e.touches.length === 1 && touchStartRef.current && scrollStartRef.current && containerRef.current) {
+        // Pan Move
+        const deltaX = e.touches[0].clientX - touchStartRef.current.x;
+        const deltaY = e.touches[0].clientY - touchStartRef.current.y;
+
+        // Apply scroll (inverse of drag direction)
+        containerRef.current.scrollLeft = scrollStartRef.current.left - deltaX;
+        containerRef.current.scrollTop = scrollStartRef.current.top - deltaY;
     }
   };
 
   const handleTouchEnd = () => {
     touchDistRef.current = null;
+    touchStartRef.current = null;
+    scrollStartRef.current = null;
   };
 
   const handleZoom = (change: number) => {
@@ -496,6 +521,7 @@ const CityBuilderView: React.FC<CityBuilderViewProps> = ({ onBack }) => {
 
       {/* Map Area with Scroll */}
       <div 
+        ref={containerRef}
         className="flex-1 overflow-auto bg-[#86efac] relative shadow-inner cursor-grab active:cursor-grabbing touch-none"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
