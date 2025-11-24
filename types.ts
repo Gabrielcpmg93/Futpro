@@ -80,6 +80,7 @@ export enum ScreenState {
   HOME = 'HOME',
   SQUAD = 'SQUAD',
   MATCH = 'MATCH',
+  MATCH_3D = 'MATCH_3D', // Added for 3D Gameplay
   FRIENDLY_SETUP = 'FRIENDLY_SETUP',
   SOCIAL = 'SOCIAL',
   MARKET = 'MARKET',

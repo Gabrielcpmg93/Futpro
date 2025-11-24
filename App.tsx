@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import SquadView from './components/SquadView';
 import MatchView from './components/MatchView';
+import Match3DView from './components/Match3DView'; // Import New View
 import MarketView from './components/MarketView';
 import SocialView from './components/SocialView';
 import CopaView from './components/CopaView';
@@ -174,6 +175,17 @@ const App: React.FC = () => {
             opponentColor={isPlayingLeagueMatch ? "#" + Math.floor(Math.random()*16777215).toString(16) : "#dc2626"}
         />
     );
+  }
+
+  // Route for 3D Match
+  if (currentScreen === ScreenState.MATCH_3D) {
+    return (
+        <Match3DView 
+            team={userTeam}
+            opponentName="CPU FC"
+            onFinish={handleMatchFinish}
+        />
+    )
   }
   
   if (currentScreen === ScreenState.COPA_AMERICAS) {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Team, ScreenState } from '../types';
-import { Play, Trophy, Users, Shield, Calendar, ArrowRight } from 'lucide-react';
+import { Play, Trophy, Users, Shield, Calendar, ArrowRight, Gamepad2 } from 'lucide-react';
 
 interface PlayHubProps {
   team: Team;
@@ -16,7 +16,7 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, 
       <h1 className="text-3xl font-bold text-slate-900 mb-6">Central de Jogos</h1>
 
       <div className="space-y-4">
-        {/* League Match Card */}
+        {/* League Match Card - SIMULATION */}
         <button 
             onClick={onPlayLeagueMatch}
             className="w-full bg-slate-900 text-white p-6 rounded-3xl relative overflow-hidden shadow-xl group transition-transform active:scale-95 text-left"
@@ -27,9 +27,31 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, 
                     <Shield size={32} />
                 </div>
                 <h2 className="text-2xl font-bold mb-1">Brasileirão - Rodada {currentRound}</h2>
-                <p className="text-slate-400 text-sm mb-4">Jogue com o {team.name} e some pontos na tabela.</p>
+                <p className="text-slate-400 text-sm mb-4">Simulação Tática 2D</p>
                 <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold uppercase tracking-wide">
-                    Jogar Agora <Play size={16} fill="currentColor" />
+                    Simular <Play size={16} fill="currentColor" />
+                </div>
+            </div>
+        </button>
+
+        {/* 3D Match Card - NEW */}
+        <button 
+            onClick={() => onNavigate(ScreenState.MATCH_3D)}
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-6 rounded-3xl relative overflow-hidden shadow-xl group transition-transform active:scale-95 text-left"
+        >
+             <div className="absolute bottom-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <div className="relative z-10 flex flex-col items-start">
+                <div className="bg-white/20 p-3 rounded-xl mb-4 text-white">
+                    <Gamepad2 size={32} />
+                </div>
+                <div className="flex justify-between w-full items-start">
+                    <div>
+                        <h2 className="text-2xl font-bold mb-1">Partida 3D</h2>
+                        <p className="text-indigo-200 text-sm mb-4">Jogue os Melhores Momentos (Estilo Voxel)</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 text-white text-sm font-bold uppercase tracking-wide bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm">
+                    Jogar Agora <ArrowRight size={16} />
                 </div>
             </div>
         </button>
@@ -57,7 +79,7 @@ const PlayHub: React.FC<PlayHubProps> = ({ team, onNavigate, onPlayLeagueMatch, 
           <Trophy className="text-yellow-600 shrink-0 mt-1" size={20} />
           <div>
               <h3 className="font-bold text-yellow-800 text-sm">Dica do Treinador</h3>
-              <p className="text-yellow-700 text-xs mt-1">Vencer partidas do campeonato é a única forma de conquistar o troféu nacional.</p>
+              <p className="text-yellow-700 text-xs mt-1">O modo 3D permite que você controle diretamente os chutes a gol em momentos decisivos.</p>
           </div>
       </div>
     </div>
