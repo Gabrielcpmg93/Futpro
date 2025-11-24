@@ -21,7 +21,22 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
     const [selectedCar, setSelectedCar] = useState<TrafficCar | null>(null);
     const [actionLog, setActionLog] = useState<string[]>([]);
     const [ticketsIssued, setTicketsIssued] = useState(0);
-    const [shiftTime, setShiftTime] = useState("08:30");
+    const [arrestedCars, setArrestedCars] = useState(0);
+    const [shiftTime, setShiftTime] = useState("");
+
+    // --- REAL TIME CLOCK ---
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            setShiftTime(`${hours}:${minutes}`);
+        };
+        
+        updateTime(); // Initial call
+        const interval = setInterval(updateTime, 1000); // Update every second
+        return () => clearInterval(interval);
+    }, []);
 
     // --- CAR GENERATION LOGIC ---
     useEffect(() => {
@@ -97,12 +112,24 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 }
                 setTimeout(() => setSelectedCar(null), 1500); // Release car
                 break;
+            case 'arrest':
+                result = "Veículo apreendido.";
+                setArrestedCars(prev => prev + 1);
+                setCars(prev => prev.filter(c => c.id !== selectedCar.id)); // Remove car immediately
+                setSelectedCar(null); // Close menu
+                break;
             case 'release':
                 result = "Veículo liberado.";
                 setTimeout(() => setSelectedCar(null), 500);
                 break;
         }
-        setActionLog(prev => [result, ...prev].slice(0, 6)); // Keep more logs visible
+        
+        // Add log unless we immediately closed the menu (arrest)
+        if (action !== 'arrest') {
+             setActionLog(prev => [result, ...prev].slice(0, 6));
+        } else {
+             setActionLog(prev => [result, ...prev].slice(0, 6));
+        }
     };
 
     // --- VISUAL COMPONENTS (CSS PIXEL ART STYLE) ---
@@ -230,8 +257,9 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                             <button onClick={() => handleAction('check_lights')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">CHECAR LUZES</button>
                             <button onClick={() => handleAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">REVISTAR CARRO</button>
                             <button onClick={() => handleAction('ticket')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-black text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">MULTAR</button>
+                            <button onClick={() => handleAction('arrest')} className="bg-[#c0c0c0] hover:bg-red-600 hover:text-white border-2 border-white border-b-gray-500 border-r-gray-500 text-red-900 text-[10px] font-bold py-2 px-1 text-left active:border-t-gray-500 active:border-l-gray-500">PRENDER</button>
                             <div className="h-1"></div>
-                            <button onClick={() => handleAction('release')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-red-900 text-[10px] font-bold py-2 px-1 text-center active:border-t-gray-500 active:border-l-gray-500">LIBERAR</button>
+                            <button onClick={() => handleAction('release')} className="bg-[#c0c0c0] hover:bg-white border-2 border-white border-b-gray-500 border-r-gray-500 text-blue-900 text-[10px] font-bold py-2 px-1 text-center active:border-t-gray-500 active:border-l-gray-500">LIBERAR</button>
                         </div>
                     </div>
                 )}
@@ -266,12 +294,20 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                     <div className="bg-[#9ca3af] w-full h-full rounded border-4 border-[#4b5563] p-2 flex flex-col items-center justify-center relative shadow-inner">
                         {/* Digital Watch Face */}
                         <div className="bg-[#8da399] w-full h-12 border-2 border-gray-600 font-mono flex items-center justify-center text-2xl tracking-widest text-black/80 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.2)] mb-2">
-                            {shiftTime} <span className="text-[10px] ml-1 mt-2">AM</span>
+                            {shiftTime}
                         </div>
                         
-                        {/* Tickets Count */}
-                        <div className="w-full bg-[#fef3c7] p-2 border border-gray-400 text-[12px] font-bold text-center font-serif -rotate-1 shadow-sm">
-                            MULTAS: {ticketsIssued}
+                        <div className="w-full flex gap-1">
+                            {/* Tickets Count */}
+                            <div className="flex-1 bg-[#fef3c7] p-1 border border-gray-400 text-[10px] font-bold text-center font-serif shadow-sm leading-tight flex flex-col justify-center">
+                                <span>MULTAS</span>
+                                <span className="text-lg">{ticketsIssued}</span>
+                            </div>
+                            {/* Arrested Count */}
+                            <div className="flex-1 bg-[#fecaca] p-1 border border-gray-400 text-[10px] font-bold text-center font-serif shadow-sm leading-tight flex flex-col justify-center text-red-900">
+                                <span>PRESOS</span>
+                                <span className="text-lg">{arrestedCars}</span>
+                            </div>
                         </div>
                     </div>
                     <div className="absolute bottom-1 right-2 text-[6px] text-white opacity-50">ZIBRA SECURITY</div>
