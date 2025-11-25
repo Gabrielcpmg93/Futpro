@@ -26,7 +26,6 @@ const advancePatternIndex = (currentIndex: number) => {
 
 // --- VOXEL COMPONENTS ---
 
-// Fix: Define an explicit interface for VoxelFan props and use React.FC
 interface VoxelFanProps {
     x: number;
     y: number;
@@ -139,9 +138,9 @@ const VoxelStadium = ({ teamPrimaryColor, opponentColor }: { teamPrimaryColor: s
         </div>
 
         {/* Left Side Stands */}
-        <VoxelStands teamColor={teamPrimaryColor} isLeft={true} />
+        {/* <VoxelStands teamColor={teamPrimaryColor} isLeft={true} /> */}
         {/* Right Side Stands */}
-        <VoxelStands teamColor={opponentColor} isLeft={false} />
+        {/* <VoxelStands teamColor={opponentColor} isLeft={false} /> */}
     </div>
 );
 
@@ -265,7 +264,7 @@ const Match3DView: React.FC<Match3DViewProps> = ({
         setTurn(nextTurn);
         setGameState('IDLE');
         setResultMsg(null);
-        setBallPos({ x: 50, y: 80, z: 0 });
+        setBallPos({ x: 50, y: 75, z: 0 }); // Adjusted Y for closer player
         setKeeperPos(50);
         setStrikerPos(50);
         setKeeperPose('idle');
@@ -399,7 +398,7 @@ const Match3DView: React.FC<Match3DViewProps> = ({
     };
 
     return (
-        <div className="w-full h-screen bg-slate-900 flex flex-col relative overflow-hidden touch-none select-none">
+        <div className="w-full h-screen bg-gradient-to-b from-sky-300 to-blue-200 flex flex-col relative overflow-hidden touch-none select-none">
             
             {/* HUD */}
             <div className="absolute top-16 left-0 w-full z-50 px-4 flex justify-between items-start pointer-events-none">
@@ -441,8 +440,8 @@ const Match3DView: React.FC<Match3DViewProps> = ({
 
             {/* 3D SCENE */}
             <div 
-                className="flex-1 relative flex items-center justify-center bg-sky-300"
-                style={{ perspective: '800px' }}
+                className="flex-1 relative flex items-center justify-center"
+                style={{ perspective: '400px' }} /* Mais perto da câmera */
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -450,13 +449,12 @@ const Match3DView: React.FC<Match3DViewProps> = ({
             >
                 {/* FIELD CONTAINER */}
                 <div 
-                    // Adjusted for responsiveness: uses vmin (viewport minimum) and max-w/max-h
                     className="relative w-[70vmin] h-[105vmin] mx-auto max-w-xl max-h-2xl transform-style-3d transition-transform duration-700"
                     style={{ 
-                        transform: 'rotateX(40deg) translateY(-20px)',
+                        transform: 'rotateX(60deg) translateY(120px) translateZ(-100px)', /* Ajuste para zoom e posição */
                     }}
                 >
-                    <VoxelStadium teamPrimaryColor={team.primaryColor} opponentColor={opponentColor} />
+                    {/* VoxelStadium removido */}
 
                     {/* THE PITCH - Improved Texture */}
                     <div 
@@ -499,8 +497,8 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                     <VoxelPlayer 
                         color={turn === 'PLAYER' ? team.primaryColor : opponentColor}
                         x={strikerPos} 
-                        y={88} 
-                        scale={1.2} 
+                        y={75} /* Jogador mais próximo */
+                        scale={1.3} /* Mais ampliado */
                         pose={strikerPose}
                     />
 
