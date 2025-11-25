@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { Team } from '../types'; 
+import { Team, CopaProgress } from '../types'; 
 import { COPA_TEAMS_MAPPING } from '../services/geminiService';
 import { Trophy, ArrowRight, CheckCircle } from 'lucide-react';
 import MatchView from './MatchView';
 
 interface CopaViewProps {
     team: Team;
+    progress: CopaProgress; // Receive state from App
+    onUpdateProgress: (newProgress: CopaProgress) => void; // Callback to save state
     onBack: () => void;
     onWinTrophy: () => void;
     onMatchRecord: (opponent: string, result: 'win' | 'loss' | 'draw', scoreUser: number, scoreOpponent: number) => void;
@@ -16,14 +18,13 @@ const GROUPS = {
     A: ["Deportivo Táchira", "Carabobo", "Peñarol", "Alianza Lima", "Sporting Cristal"],
     B: ["Universitário", "Nacional", "Cerro Porteño", "Olimpia", "Libertad"],
     C: ["Barcelona de Guayaquil", "Independiente del Valle", "LDU Quito", "Atlético Nacional", "Atlético Bucaramanga"],
-    E: ["Universidad de Chile", "Colo-Colo", "Bolívar", "San Antonio Bulo Bulo", "River Plate"] // Using last batch as E as requested
+    E: ["Universidad de Chile", "Colo-Colo", "Bolívar", "San Antonio Bulo Bulo", "River Plate"] 
 };
 
-const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy, onMatchRecord }) => {
-    const [currentGroup, setCurrentGroup] = useState<'A' | 'B' | 'C' | 'E'>('A');
-    const [matchIndex, setMatchIndex] = useState(0);
+const CopaView: React.FC<CopaViewProps> = ({ team, progress, onUpdateProgress, onBack, onWinTrophy, onMatchRecord }) => {
+    // Use progress from props instead of local state
+    const { currentGroup, matchIndex, matchesPlayedTotal } = progress;
     const [inMatch, setInMatch] = useState(false);
-    const [matchesPlayedSession, setMatchesPlayedSession] = useState(0);
 
     // Helper to get mapped name
     const getOpponentName = (realName: string) => {
@@ -35,36 +36,55 @@ const CopaView: React.FC<CopaViewProps> = ({ team, onBack, onWinTrophy, onMatchR
     const currentOpponentFictional = getOpponentName(currentOpponentReal);
 
     // Logic: Win 2, Lose 1, Repeat.
-    // 0 -> Win
-    // 1 -> Win
-    // 2 -> Loss
-    const patternIndex = matchesPlayedSession % 3;
+    const patternIndex = matchesPlayedTotal % 3;
     const forcedResult = patternIndex === 2 ? 'loss' : 'win';
 
     const handleMatchEnd = (result: 'win' | 'loss' | 'draw', userScore: number, opponentScore: number) => {
         setInMatch(false);
-        setMatchesPlayedSession(prev => prev + 1);
         
         // Report match result for news generation
         onMatchRecord(currentOpponentFictional, result, userScore, opponentScore);
 
         if (result === 'win') {
+            let nextMatchIndex = matchIndex;
+            let nextGroup = currentGroup;
+            
             if (matchIndex < 4) {
-                setMatchIndex(matchIndex + 1);
+                nextMatchIndex = matchIndex + 1;
             } else {
                 // Group finished
-                if (currentGroup === 'A') { setCurrentGroup('B'); setMatchIndex(0); }
-                else if (currentGroup === 'B') { setCurrentGroup('C'); setMatchIndex(0); }
-                else if (currentGroup === 'C') { setCurrentGroup('E'); setMatchIndex(0); }
+                nextMatchIndex = 0;
+                if (currentGroup === 'A') nextGroup = 'B';
+                else if (currentGroup === 'B') nextGroup = 'C';
+                else if (currentGroup === 'C') nextGroup = 'E';
                 else if (currentGroup === 'E') {
                     // WON THE CUP
                     onWinTrophy();
                     alert("Campeão da Copa das Américas!");
+                    onUpdateProgress({
+                        currentGroup: 'A',
+                        matchIndex: 0,
+                        matchesPlayedTotal: 0 // Reset or keep growing? Resetting for replayability
+                    });
                     onBack();
+                    return;
                 }
             }
+
+            // Save Progress via Callback
+            onUpdateProgress({
+                currentGroup: nextGroup,
+                matchIndex: nextMatchIndex,
+                matchesPlayedTotal: matchesPlayedTotal + 1
+            });
+
         } else {
+            // Loss = Retry same match, but increment total plays to advance pattern logic
             alert(`Você não venceu! Tente novamente contra ${currentOpponentFictional}. (Resultado forçado: ${userScore}x${opponentScore})`);
+            onUpdateProgress({
+                ...progress,
+                matchesPlayedTotal: matchesPlayedTotal + 1
+            });
         }
     };
 

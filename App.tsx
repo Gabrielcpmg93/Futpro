@@ -19,7 +19,7 @@ import CalendarView from './components/CalendarView';
 import CityBuilderView from './components/CityBuilderView';
 import PressConferenceView from './components/PressConferenceView';
 import PoliceModeView from './components/PoliceModeView';
-import { Team, ScreenState, LeagueTeam, NewsArticle } from './types';
+import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -32,6 +32,13 @@ const App: React.FC = () => {
   const TOTAL_LEAGUE_ROUNDS = 38;
   const [isPlayingLeagueMatch, setIsPlayingLeagueMatch] = useState(false);
   const [leagueOpponent, setLeagueOpponent] = useState<string>("");
+
+  // Copa America State (Persistence)
+  const [copaProgress, setCopaProgress] = useState<CopaProgress>({
+      currentGroup: 'A',
+      matchIndex: 0,
+      matchesPlayedTotal: 0
+  });
 
   // Match History State for Press Conference
   const [lastMatchData, setLastMatchData] = useState<{
@@ -185,6 +192,8 @@ const App: React.FC = () => {
       {currentScreen === ScreenState.COPA_AMERICAS && (
           <CopaView 
             team={userTeam} 
+            progress={copaProgress} // Pass state
+            onUpdateProgress={setCopaProgress} // Pass updater
             onBack={() => setCurrentScreen(ScreenState.HOME)} 
             onWinTrophy={() => setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Copa das Américas"] })}
             onMatchRecord={(opp, res, us, os) => {

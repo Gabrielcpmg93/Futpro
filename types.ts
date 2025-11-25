@@ -75,6 +75,13 @@ export interface NewsArticle {
   imageCaption: string;
 }
 
+// New Interface for Copa Persistence
+export interface CopaProgress {
+    currentGroup: 'A' | 'B' | 'C' | 'E';
+    matchIndex: number;
+    matchesPlayedTotal: number;
+}
+
 export enum ScreenState {
   SELECT_TEAM = 'SELECT_TEAM',
   HOME = 'HOME',
