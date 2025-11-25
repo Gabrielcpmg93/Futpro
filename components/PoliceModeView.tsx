@@ -34,6 +34,7 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
     
     const [selectedCar, setSelectedCar] = useState<TrafficCar | null>(null);
     const [selectedPedestrian, setSelectedPedestrian] = useState<Pedestrian | null>(null);
+    const [showFineMenu, setShowFineMenu] = useState(false); // Submenu state
     
     const [actionLog, setActionLog] = useState<string[]>([]);
     const [ticketsIssued, setTicketsIssued] = useState(0);
@@ -68,12 +69,10 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
     // --- PHASE CHANGE HANDLER (CLEANUP) ---
     useEffect(() => {
         if (trafficPhase === 'CARS') {
-            // Switch TO Cars: Clear Pedestrians
             setPedestrians([]);
             setSelectedPedestrian(null);
             setActionLog(prev => [`Fluxo alterado para: VEÍCULOS`, ...prev].slice(0, 6));
         } else {
-            // Switch TO Pedestrians: Clear Cars
             setCars([]);
             setSelectedCar(null);
             setActionLog(prev => [`Fluxo alterado para: PEDESTRES`, ...prev].slice(0, 6));
@@ -84,14 +83,13 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
     useEffect(() => {
         const interval = setInterval(() => {
             // Generate Cars (Only if in CARS phase)
-            // CHANGED: cars.length < 1 to ensure they come one by one
             if (trafficPhase === 'CARS' && cars.length < 1 && !selectedCar) {
                 const newCar: TrafficCar = {
                     id: Date.now(),
                     type: ['sedan', 'taxi', 'truck', 'sports'][Math.floor(Math.random() * 4)] as any,
                     color: ['#ef4444', '#3b82f6', '#eab308', '#10b981', '#64748b', '#000000'][Math.floor(Math.random() * 6)],
-                    x: -30, // Start further back
-                    speed: 0.2 + Math.random() * 0.2, // Slightly slower to allow reaction
+                    x: -30,
+                    speed: 0.2 + Math.random() * 0.2,
                     plate: `ABC-${Math.floor(1000 + Math.random() * 9000)}`,
                     defects: []
                 };
@@ -103,7 +101,6 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
             }
 
             // Generate Pedestrians (Only if in PEDS phase)
-            // CHANGED: pedestrians.length < 1 for consistency
             if (trafficPhase === 'PEDS' && pedestrians.length < 1 && !selectedPedestrian) {
                 const dir = Math.random() > 0.5 ? 1 : -1;
                 const newPed: Pedestrian = {
@@ -129,13 +126,11 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
         if (selectedCar || selectedPedestrian) return; // Pause when interacting
 
         const loop = setInterval(() => {
-            // Move Cars
             setCars(prev => prev.map(c => ({
                 ...c,
                 x: c.x + c.speed
             })).filter(c => c.x < 120));
 
-            // Move Pedestrians
             setPedestrians(prev => prev.map(p => ({
                 ...p,
                 x: p.x + p.speed
@@ -146,14 +141,15 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
         return () => clearInterval(loop);
     }, [selectedCar, selectedPedestrian]);
 
-    // --- ACTIONS ---
+    // --- CAR ACTIONS ---
     const handleStopCar = (car: TrafficCar) => {
         setSelectedPedestrian(null); 
         setSelectedCar(car);
+        setShowFineMenu(false);
         setActionLog([`Veículo ${car.plate} parado.`]);
     };
 
-    const handleCarAction = (action: string) => {
+    const handleCarAction = (action: string, value?: number) => {
         if (!selectedCar) return;
         let result = "";
         
@@ -162,17 +158,27 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 result = selectedCar.defects.includes('Placa Vencida') || selectedCar.defects.includes('Roubado') 
                     ? `ALERTA: ${selectedCar.defects.join(', ')}` 
                     : "Placa: REGULAR";
-                break;
+                // Clear previous plate checks to avoid spam
+                setActionLog(prev => [result, ...prev.filter(l => !l.includes('Placa:') && !l.includes('ALERTA: Placa') && !l.includes('ALERTA: Roubado'))].slice(0, 6));
+                return; // Return early
+
             case 'check_lights':
                 result = selectedCar.defects.includes('Farol Quebrado') ? "ALERTA: Farol Quebrado" : "Luzes: OK";
-                break;
+                // Clear previous light checks
+                setActionLog(prev => [result, ...prev.filter(l => !l.includes('Luzes:') && !l.includes('ALERTA: Farol'))].slice(0, 6));
+                return; // Return early
+
             case 'search':
                 result = Math.random() < 0.1 ? "ENCONTRADO: Contrabando!" : "Busca: Nada encontrado.";
                 break;
-            case 'ticket':
-                result = "Multa aplicada (+$50)";
+            case 'ticket_menu':
+                setShowFineMenu(true);
+                return;
+            case 'apply_ticket':
+                result = `Multa aplicada: $${value}`;
                 setTicketsIssued(prev => prev + 1);
-                setTimeout(() => setSelectedCar(null), 1500);
+                setShowFineMenu(false);
+                setTimeout(() => setSelectedCar(null), 1000);
                 break;
             case 'arrest':
                 result = "Motorista preso. Carro apreendido.";
@@ -185,26 +191,39 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 setTimeout(() => setSelectedCar(null), 500);
                 break;
         }
-        if (action !== 'arrest') setActionLog(prev => [result, ...prev].slice(0, 6));
-        else setActionLog(prev => [result, ...prev].slice(0, 6));
+        setActionLog(prev => [result, ...prev].slice(0, 6));
     };
 
+    // --- PEDESTRIAN ACTIONS ---
     const handleStopPedestrian = (ped: Pedestrian) => {
         setSelectedCar(null); 
         setSelectedPedestrian(ped);
+        setShowFineMenu(false);
         setActionLog([`${ped.name} abordado.`]);
     };
 
-    const handlePedestrianAction = (action: string) => {
+    const handlePedestrianAction = (action: string, value?: number) => {
         if (!selectedPedestrian) return;
         let result = "";
 
         switch (action) {
             case 'id':
                 result = selectedPedestrian.isWanted ? "ALERTA: MANDADO DE PRISÃO!" : "Documento: Limpo.";
-                break;
+                // Clear previous ID checks
+                setActionLog(prev => [result, ...prev.filter(l => !l.includes('Documento:') && !l.includes('ALERTA: MANDADO'))].slice(0, 6));
+                return;
+
             case 'search':
                 result = selectedPedestrian.hasIllegalItem ? "ENCONTRADO: Substância Ilícita!" : "Revista: Nada encontrado.";
+                break;
+            case 'ticket_menu':
+                setShowFineMenu(true);
+                return;
+            case 'apply_ticket':
+                result = `Multa aplicada: $${value}`;
+                setTicketsIssued(prev => prev + 1);
+                setShowFineMenu(false);
+                setTimeout(() => setSelectedPedestrian(null), 1000);
                 break;
             case 'warn':
                 result = "Cidadão advertido e liberado.";
@@ -217,8 +236,7 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 setSelectedPedestrian(null);
                 break;
         }
-        if (action !== 'arrest') setActionLog(prev => [result, ...prev].slice(0, 6));
-        else setActionLog(prev => [result, ...prev].slice(0, 6));
+        setActionLog(prev => [result, ...prev].slice(0, 6));
     };
 
     // --- RENDER HELPERS ---
@@ -314,25 +332,37 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                             <span>{selectedCar ? 'VEÍCULO' : 'CIDADÃO'}</span>
                             <button onClick={() => { setSelectedCar(null); setSelectedPedestrian(null); }} className="font-bold bg-red-500 px-2 hover:bg-red-600">X</button>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            {selectedCar ? (
-                                <>
-                                    <button onClick={() => handleCarAction('check_plate')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">VERIFICAR PLACA</button>
-                                    <button onClick={() => handleCarAction('check_lights')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">CHECAR LUZES</button>
-                                    <button onClick={() => handleCarAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">REVISTAR CARRO</button>
-                                    <button onClick={() => handleCarAction('ticket')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">MULTAR</button>
-                                    <button onClick={() => handleCarAction('arrest')} className="bg-[#c0c0c0] hover:bg-red-600 hover:text-white border-2 border-gray-500 text-red-900 text-xs font-bold py-2 px-2 text-left">PRENDER</button>
-                                    <button onClick={() => handleCarAction('release')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-blue-900 text-xs font-bold py-2 px-2 text-center mt-1">LIBERAR</button>
-                                </>
-                            ) : (
-                                <>
-                                    <button onClick={() => handlePedestrianAction('id')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">PEDIR RG</button>
-                                    <button onClick={() => handlePedestrianAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">REVISTAR</button>
-                                    <button onClick={() => handlePedestrianAction('arrest')} className="bg-[#c0c0c0] hover:bg-red-600 hover:text-white border-2 border-gray-500 text-red-900 text-xs font-bold py-2 px-2 text-left">PRENDER</button>
-                                    <button onClick={() => handlePedestrianAction('warn')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-center mt-1">ADVERTIR</button>
-                                </>
-                            )}
-                        </div>
+                        
+                        {showFineMenu ? (
+                            <div className="flex flex-col gap-1 bg-gray-200 p-1">
+                                <div className="text-black text-xs font-bold text-center mb-1">VALOR DA MULTA</div>
+                                <button onClick={() => selectedCar ? handleCarAction('apply_ticket', 50) : handlePedestrianAction('apply_ticket', 50)} className="bg-white hover:bg-gray-100 border border-gray-400 text-black text-xs font-bold py-1 px-1">$50 - Leve</button>
+                                <button onClick={() => selectedCar ? handleCarAction('apply_ticket', 150) : handlePedestrianAction('apply_ticket', 150)} className="bg-white hover:bg-gray-100 border border-gray-400 text-black text-xs font-bold py-1 px-1">$150 - Média</button>
+                                <button onClick={() => selectedCar ? handleCarAction('apply_ticket', 500) : handlePedestrianAction('apply_ticket', 500)} className="bg-white hover:bg-gray-100 border border-gray-400 text-black text-xs font-bold py-1 px-1">$500 - Grave</button>
+                                <button onClick={() => setShowFineMenu(false)} className="bg-red-200 hover:bg-red-300 border border-red-400 text-red-900 text-xs font-bold py-1 px-1 mt-1">Voltar</button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-1">
+                                {selectedCar ? (
+                                    <>
+                                        <button onClick={() => handleCarAction('check_plate')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">VERIFICAR PLACA</button>
+                                        <button onClick={() => handleCarAction('check_lights')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">CHECAR LUZES</button>
+                                        <button onClick={() => handleCarAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">REVISTAR CARRO</button>
+                                        <button onClick={() => handleCarAction('ticket_menu')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">MULTAR...</button>
+                                        <button onClick={() => handleCarAction('arrest')} className="bg-[#c0c0c0] hover:bg-red-600 hover:text-white border-2 border-gray-500 text-red-900 text-xs font-bold py-2 px-2 text-left">PRENDER</button>
+                                        <button onClick={() => handleCarAction('release')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-blue-900 text-xs font-bold py-2 px-2 text-center mt-1">LIBERAR</button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button onClick={() => handlePedestrianAction('id')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">PEDIR RG</button>
+                                        <button onClick={() => handlePedestrianAction('search')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">REVISTAR</button>
+                                        <button onClick={() => handlePedestrianAction('ticket_menu')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-left">MULTAR...</button>
+                                        <button onClick={() => handlePedestrianAction('arrest')} className="bg-[#c0c0c0] hover:bg-red-600 hover:text-white border-2 border-gray-500 text-red-900 text-xs font-bold py-2 px-2 text-left">PRENDER</button>
+                                        <button onClick={() => handlePedestrianAction('warn')} className="bg-[#c0c0c0] hover:bg-white border-2 border-gray-500 text-black text-xs font-bold py-2 px-2 text-center mt-1">ADVERTIR</button>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
