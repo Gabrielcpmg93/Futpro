@@ -92,7 +92,8 @@ const VoxelPlayer = ({
                 transformStyle: 'preserve-3d'
             }}
         >
-            <div className={`relative w-12 h-20 preserve-3d ${pose === 'idle' ? 'animate-bounce-slow' : ''}`}>
+            {/* Player container - increased height for better proportions */}
+            <div className={`relative w-12 h-28 preserve-3d ${pose === 'idle' ? 'animate-bounce-slow' : ''}`}>
                 {/* Shadow */}
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-4 bg-black/30 rounded-full blur-[3px]"></div>
                 
@@ -105,11 +106,11 @@ const VoxelPlayer = ({
                 <div className="absolute bottom-0 right-2 w-4 h-3 bg-black rounded-sm border-b-2 border-gray-600"></div>
 
                 {/* Shorts */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-10 h-5 bg-white rounded-sm shadow-sm"></div>
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-10 h-5 bg-white rounded-sm shadow-sm"></div>
                 
                 {/* Torso (Jersey) - Thicker look */}
                 <div 
-                    className="absolute bottom-10 left-1/2 -translate-x-1/2 w-10 h-9 flex items-center justify-center rounded-t-sm shadow-inner"
+                    className="absolute bottom-16 left-1/2 -translate-x-1/2 w-10 h-10 flex items-center justify-center rounded-t-sm shadow-inner"
                     style={{ 
                         backgroundColor: color,
                         boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1), 2px 2px 0 rgba(0,0,0,0.2)' // Fake depth
@@ -123,8 +124,11 @@ const VoxelPlayer = ({
                     <div className="absolute -right-2.5 top-0 w-2.5 h-6 bg-inherit rounded-r-sm origin-top-left -rotate-12 border-l border-black/10"></div>
                 </div>
 
+                {/* Neck */}
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#e0ac69] z-0"></div>
+
                 {/* Head - Improved Shape */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#e0ac69] rounded-md shadow-sm border-b-2 border-[#d49e58]">
+                <div className="absolute bottom-28 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#e0ac69] rounded-md shadow-sm border-b-2 border-[#d49e58]">
                     {/* Hair */}
                     <div className="absolute -top-1 w-full h-3 bg-black/80 rounded-t-md"></div>
                     <div className="absolute top-0 -left-0.5 w-1 h-4 bg-black/80"></div>
@@ -311,7 +315,7 @@ const Match3DView: React.FC<Match3DViewProps> = ({
         <div className="w-full h-screen bg-slate-900 flex flex-col relative overflow-hidden touch-none select-none">
             
             {/* HUD */}
-            <div className="absolute top-4 left-0 w-full z-50 px-4 flex justify-between items-start pointer-events-none">
+            <div className="absolute top-16 left-0 w-full z-50 px-4 flex justify-between items-start pointer-events-none">
                  <button 
                     onClick={onBack}
                     className="pointer-events-auto bg-white/10 text-white p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-colors"

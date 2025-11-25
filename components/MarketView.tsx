@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Team, Player } from '../types';
 import { generateMarketPlayers } from '../services/geminiService';
-import { DollarSign, Search } from 'lucide-react';
+import { DollarSign, Search, RefreshCw } from 'lucide-react';
 
 interface MarketViewProps {
   team: Team;
@@ -33,6 +33,11 @@ const MarketView: React.FC<MarketViewProps> = ({ team, onUpdateTeam, onBack }) =
       setSelectedPlayer(null);
   };
 
+  const handleRefreshPlayers = () => {
+      setPlayers(generateMarketPlayers());
+      alert("Lista de jogadores atualizada!");
+  };
+
   return (
       <div className="p-6 pb-24 min-h-screen bg-slate-50">
           <div className="flex items-center justify-between mb-6">
@@ -43,6 +48,13 @@ const MarketView: React.FC<MarketViewProps> = ({ team, onUpdateTeam, onBack }) =
           <div className="bg-white p-4 rounded-2xl shadow-sm mb-4 flex items-center gap-2">
               <Search className="text-slate-400" />
               <input type="text" placeholder="Buscar jogador..." className="outline-none text-sm w-full" />
+              <button 
+                onClick={handleRefreshPlayers} 
+                className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors active:scale-95"
+                title="Atualizar lista de jogadores"
+              >
+                  <RefreshCw size={18} className="text-slate-600" />
+              </button>
           </div>
 
           <div className="grid gap-3">
