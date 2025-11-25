@@ -19,6 +19,7 @@ import CalendarView from './components/CalendarView';
 import CityBuilderView from './components/CityBuilderView';
 import PressConferenceView from './components/PressConferenceView';
 import PoliceModeView from './components/PoliceModeView';
+import FarmModeView from './components/FarmModeView';
 import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
@@ -250,6 +251,10 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.POLICE_MODE && (
           <PoliceModeView onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+
+      {currentScreen === ScreenState.FARM_MODE && (
+          <FarmModeView onBack={() => setCurrentScreen(ScreenState.HOME)} />
       )}
     </Layout>
   );
