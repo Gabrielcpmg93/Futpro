@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Team } from '../types';
 import { ArrowLeft, Hand } from 'lucide-react';
@@ -27,7 +26,90 @@ const advancePatternIndex = (currentIndex: number) => {
 
 // --- VOXEL COMPONENTS ---
 
-const VoxelStadium = () => (
+// Fix: Define an explicit interface for VoxelFan props and use React.FC
+interface VoxelFanProps {
+    x: number;
+    y: number;
+    scale?: number;
+    fanColor: string;
+}
+
+const VoxelFan: React.FC<VoxelFanProps> = ({ x, y, scale = 0.3, fanColor }) => {
+    return (
+        <div
+            className="absolute transition-transform duration-300 ease-out animate-wiggle"
+            style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                transform: `translate(-50%, -50%) scale(${scale})`,
+                transformStyle: 'preserve-3d',
+                zIndex: Math.floor(y),
+            }}
+        >
+            {/* Body */}
+            <div className="w-4 h-6 rounded-sm absolute bottom-0 left-1/2 -translate-x-1/2" style={{ backgroundColor: fanColor }}></div>
+            {/* Head */}
+            <div className="w-4 h-4 rounded-full absolute top-0 left-1/2 -translate-x-1/2 bg-yellow-100 border border-black/10"></div>
+        </div>
+    );
+};
+
+const VoxelStands = ({ teamColor, isLeft }: { teamColor: string, isLeft: boolean }) => {
+    const numRows = 5;
+    const fansPerRow = 10;
+    const fanColors = [teamColor, '#fff', '#000', '#666']; // Base colors
+    
+    return (
+        <div
+            className="absolute top-[20%] w-[50%] h-[150px] transform-style-3d overflow-hidden"
+            style={{
+                [isLeft ? 'left' : 'right']: '50%', // Start at center of stadium
+                transform: `
+                    translateZ(-100px) /* Push back */
+                    ${isLeft ? 'translateX(-100%)' : 'translateX(0%)'} /* Move to side */
+                    rotateY(${isLeft ? -60 : 60}deg) /* Angle towards field */
+                    skewX(${isLeft ? -15 : 15}deg) /* Perspective distortion */
+                    translateY(-10%) /* Adjust vertical position */
+                `,
+                transformOrigin: isLeft ? 'bottom right' : 'bottom left', // Pivot point for rotation
+                width: '600px', // Fixed width for consistent size
+                height: '200px', // Fixed height
+            }}
+        >
+            {/* Base of the stand */}
+            <div className="absolute inset-0 bg-slate-900 border border-slate-700 shadow-xl"></div>
+
+            {Array.from({ length: numRows }).map((_, rowIndex) => (
+                <div
+                    key={rowIndex}
+                    className="absolute w-full h-[30px] flex items-center justify-evenly"
+                    style={{
+                        bottom: `${rowIndex * 20}%`, // Stacking rows
+                        transform: `translateZ(${rowIndex * 10}px) translateY(${rowIndex * -5}px)`, // Depth and height for tiers
+                        backgroundColor: `rgba(0,0,0,${0.2 + rowIndex * 0.05})`, // Darker as it goes up
+                        zIndex: numRows - rowIndex,
+                    }}
+                >
+                    {Array.from({ length: fansPerRow }).map((_, fanIndex) => {
+                        const randomFanColor = fanColors[Math.floor(Math.random() * fanColors.length)];
+                        return (
+                            <VoxelFan
+                                key={fanIndex}
+                                x={((fanIndex + 0.5) / fansPerRow) * 100}
+                                y={50} // Vertically centered in the row
+                                fanColor={randomFanColor}
+                                scale={0.25 + (rowIndex * 0.03)} // Fans in front rows slightly larger
+                            />
+                        );
+                    })}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+
+const VoxelStadium = ({ teamPrimaryColor, opponentColor }: { teamPrimaryColor: string, opponentColor: string }) => (
     <div className="absolute inset-0 pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
         {/* Sky */}
         <div className="absolute inset-0 bg-gradient-to-b from-sky-300 to-blue-200 -z-50"></div>
@@ -55,6 +137,11 @@ const VoxelStadium = () => (
         >
             <h1 className="text-white font-black text-8xl opacity-10 tracking-widest uppercase">ARENA 3D</h1>
         </div>
+
+        {/* Left Side Stands */}
+        <VoxelStands teamColor={teamPrimaryColor} isLeft={true} />
+        {/* Right Side Stands */}
+        <VoxelStands teamColor={opponentColor} isLeft={false} />
     </div>
 );
 
@@ -369,22 +456,25 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                         transform: 'rotateX(40deg) translateY(-20px)',
                     }}
                 >
-                    <VoxelStadium />
+                    <VoxelStadium teamPrimaryColor={team.primaryColor} opponentColor={opponentColor} />
 
                     {/* THE PITCH - Improved Texture */}
                     <div 
                         className="absolute inset-0 bg-[#4ade80] shadow-2xl rounded-lg overflow-hidden border-4 border-white/20"
                         style={{
                             backgroundImage: `
+                                linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 50%), /* Subtle bottom shadow for depth */
                                 repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.15) 50px),
                                 repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 25px, transparent 25px, transparent 50px),
                                 linear-gradient(to bottom, #22c55e 0%, #4ade80 100%)
-                            `
+                            `,
+                            boxShadow: 'inset 0px 0px 50px rgba(0,0,0,0.4)', // Inner shadow for field depth
+                            transform: 'translateZ(-5px)' // Slightly behind players/ball
                         }}
                     >
                         {/* Goal Area Lines */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[15%] border-x-4 border-b-4 border-white/60 bg-white/5"></div>
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[6%] border-x-4 border-b-4 border-white/60"></div>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[15%] border-x-4 border-b-4 border-white/60 bg-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"></div>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[6%] border-x-4 border-b-4 border-white/60 shadow-[0_4px_8px_rgba(0,0,0,0.2)]"></div>
                         <div className="absolute top-[11%] left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-sm"></div>
                     </div>
 
