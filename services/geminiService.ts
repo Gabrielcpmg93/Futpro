@@ -257,7 +257,17 @@ export const generateSocialPosts = (teamName: string): SocialPost[] => {
 
 export const generatePlayerReply = async (authorName: string, postContent: string, userComment: string): Promise<string> => {
   const ai = getAiClient();
-  const defaultReply = "Valeu pelo apoio! ⚽";
+  const defaultReplies = [
+    "Valeu pelo apoio! ⚽",
+    "Obrigado pela mensagem! 👏",
+    "Tamo junto, torcedor! 💪",
+    "Sua força nos impulsiona! 🙌",
+    "Sempre bom sentir esse apoio! TMJ!",
+    "É pra vocês que a gente joga! 🏟️",
+    "Fico feliz com o carinho! 😊",
+    "Vamos em busca dos nossos objetivos! ✨",
+  ];
+  const defaultReply = defaultReplies[Math.floor(Math.random() * defaultReplies.length)];
 
   if (!ai) return defaultReply;
 
@@ -269,8 +279,9 @@ export const generatePlayerReply = async (authorName: string, postContent: strin
         You posted this on social media: "${postContent}".
         A fan commented: "${userComment}".
         
-        Write a short reply (max 20 words) in Portuguese to this fan. 
-        Be informal, authentic, and match the context. Use emojis if appropriate.
+        Write a short, engaging, and personal reply (max 20 words) in Portuguese, as if you are the football player. 
+        Your response should directly acknowledge the fan's comment, reflect your personality, and use emojis when suitable. 
+        Aim for variety in your tone and content, avoiding generic "thank you for support" only.
       `,
     });
     
