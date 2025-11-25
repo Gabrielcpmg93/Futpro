@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TeamSelector from './components/TeamSelector';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -20,22 +20,41 @@ import CityBuilderView from './components/CityBuilderView';
 import PressConferenceView from './components/PressConferenceView';
 import PoliceModeView from './components/PoliceModeView';
 import FarmModeView from './components/FarmModeView';
+import UpdatesView from './components/UpdatesView'; // Import New Updates View
 import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
+const LOCAL_STORAGE_KEY = 'futmanager_pro_save';
+
+// Helper function to load state from localStorage
+const loadState = () => {
+  try {
+    const serializedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (serializedState === null) {
+      return undefined; // Let Redux (or useState) initialize state
+    }
+    return JSON.parse(serializedState);
+  } catch (error) {
+    console.error("Error loading state from localStorage:", error);
+    return undefined;
+  }
+};
+
 const App: React.FC = () => {
-  const [userTeam, setUserTeam] = useState<Team | null>(null);
-  const [currentScreen, setCurrentScreen] = useState<ScreenState>(ScreenState.SELECT_TEAM);
+  const savedState = loadState();
+
+  const [userTeam, setUserTeam] = useState<Team | null>(savedState ? savedState.userTeam : null);
+  const [currentScreen, setCurrentScreen] = useState<ScreenState>(savedState ? savedState.currentScreen : ScreenState.SELECT_TEAM);
 
   // League State
-  const [leagueTable, setLeagueTable] = useState<LeagueTeam[]>([]);
-  const [currentRound, setCurrentRound] = useState(1);
+  const [leagueTable, setLeagueTable] = useState<LeagueTeam[]>(savedState ? savedState.leagueTable : []);
+  const [currentRound, setCurrentRound] = useState(savedState ? savedState.currentRound : 1);
   const TOTAL_LEAGUE_ROUNDS = 38;
-  const [isPlayingLeagueMatch, setIsPlayingLeagueMatch] = useState(false);
-  const [leagueOpponent, setLeagueOpponent] = useState<string>("");
+  const [isPlayingLeagueMatch, setIsPlayingLeagueMatch] = useState(savedState ? savedState.isPlayingLeagueMatch : false);
+  const [leagueOpponent, setLeagueOpponent] = useState<string>(savedState ? savedState.leagueOpponent : "");
 
   // Copa America State (Persistence)
-  const [copaProgress, setCopaProgress] = useState<CopaProgress>({
+  const [copaProgress, setCopaProgress] = useState<CopaProgress>(savedState ? savedState.copaProgress : {
       currentGroup: 'A',
       matchIndex: 0,
       matchesPlayedTotal: 0
@@ -47,16 +66,37 @@ const App: React.FC = () => {
       result: 'win' | 'loss' | 'draw';
       scoreUser: number;
       scoreOpponent: number;
-  } | null>(null);
+  } | null>(savedState ? savedState.lastMatchData : null);
 
   // News State
-  const [latestNews, setLatestNews] = useState<NewsArticle>({
+  const [latestNews, setLatestNews] = useState<NewsArticle>(savedState ? savedState.latestNews : {
       headline: "Temporada Começa com Grande Expectativa!",
       subheadline: "Times se reforçam para o campeonato mais disputado do ano.",
       content: "A torcida está ansiosa para ver os novos reforços em campo. O mercado da bola esteve agitado e promessas de títulos foram feitas por diversos dirigentes. Quem levantará a taça este ano?",
       date: new Date().toLocaleDateString('pt-BR'),
       imageCaption: "Estádio lotado para a abertura da temporada."
   });
+
+  // --- Auto-save effect ---
+  useEffect(() => {
+    const appState = {
+      userTeam,
+      currentScreen,
+      leagueTable,
+      currentRound,
+      isPlayingLeagueMatch,
+      leagueOpponent,
+      copaProgress,
+      lastMatchData,
+      latestNews,
+    };
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
+    } catch (error) {
+      console.error("Error saving state to localStorage:", error);
+    }
+  }, [userTeam, currentScreen, leagueTable, currentRound, isPlayingLeagueMatch, leagueOpponent, copaProgress, lastMatchData, latestNews]);
+
 
   const handleTeamSelect = (team: Team) => {
     setUserTeam(team);
@@ -255,6 +295,10 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.FARM_MODE && (
           <FarmModeView onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+
+      {currentScreen === ScreenState.UPDATES && (
+          <UpdatesView onBack={() => setCurrentScreen(ScreenState.HOME)} />
       )}
     </Layout>
   );

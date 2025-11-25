@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic, Siren, Sprout } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic, Siren, Sprout, BellRing } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
@@ -215,8 +215,8 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
          </div>
       </button>
       
-      {/* Row for Table and News */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Row for Table, News and Updates */}
+      <div className="grid grid-cols-3 gap-3">
           {/* League Table Button */}
           <button 
             onClick={() => onNavigate(ScreenState.LEAGUE_TABLE)}
@@ -237,6 +237,17 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
                 <Newspaper size={20} />
             </div>
             <p className="text-sm font-bold text-slate-800">Notícias</p>
+          </button>
+
+          {/* Updates Button - NEW */}
+          <button 
+            onClick={() => onNavigate(ScreenState.UPDATES)}
+            className="w-full bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:bg-slate-50"
+          >
+            <div className="bg-fuchsia-100 p-2.5 rounded-xl text-fuchsia-600">
+                <BellRing size={20} />
+            </div>
+            <p className="text-sm font-bold text-slate-800">Atualizações</p>
           </button>
       </div>
 

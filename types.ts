@@ -1,4 +1,5 @@
 
+
 export enum Position {
   GK = 'GK',
   DEF = 'DEF',
@@ -103,4 +104,5 @@ export enum ScreenState {
   PRESS_CONFERENCE = 'PRESS_CONFERENCE',
   POLICE_MODE = 'POLICE_MODE',
   FARM_MODE = 'FARM_MODE',
+  UPDATES = 'UPDATES', // Novo estado para a tela de atualizações
 }

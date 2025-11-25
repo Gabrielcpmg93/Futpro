@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Team } from '../types';
 import { ArrowLeft, Hand } from 'lucide-react';
@@ -53,96 +54,96 @@ const VoxelFan: React.FC<VoxelFanProps> = ({ x, y, scale = 0.3, fanColor }) => {
     );
 };
 
-const VoxelStands = ({ teamColor, isLeft }: { teamColor: string, isLeft: boolean }) => {
-    const numRows = 5;
-    const fansPerRow = 10;
-    const fanColors = [teamColor, '#fff', '#000', '#666']; // Base colors
+// const VoxelStands = ({ teamColor, isLeft }: { teamColor: string, isLeft: boolean }) => {
+//     const numRows = 5;
+//     const fansPerRow = 10;
+//     const fanColors = [teamColor, '#fff', '#000', '#666']; // Base colors
     
-    return (
-        <div
-            className="absolute top-[20%] w-[50%] h-[150px] transform-style-3d overflow-hidden"
-            style={{
-                [isLeft ? 'left' : 'right']: '50%', // Start at center of stadium
-                transform: `
-                    translateZ(-100px) /* Push back */
-                    ${isLeft ? 'translateX(-100%)' : 'translateX(0%)'} /* Move to side */
-                    rotateY(${isLeft ? -60 : 60}deg) /* Angle towards field */
-                    skewX(${isLeft ? -15 : 15}deg) /* Perspective distortion */
-                    translateY(-10%) /* Adjust vertical position */
-                `,
-                transformOrigin: isLeft ? 'bottom right' : 'bottom left', // Pivot point for rotation
-                width: '600px', // Fixed width for consistent size
-                height: '200px', // Fixed height
-            }}
-        >
-            {/* Base of the stand */}
-            <div className="absolute inset-0 bg-slate-900 border border-slate-700 shadow-xl"></div>
+//     return (
+//         <div
+//             className="absolute top-[20%] w-[50%] h-[150px] transform-style-3d overflow-hidden"
+//             style={{
+//                 [isLeft ? 'left' : 'right']: '50%', // Start at center of stadium
+//                 transform: `
+//                     translateZ(-100px) /* Push back */
+//                     ${isLeft ? 'translateX(-100%)' : 'translateX(0%)'} /* Move to side */
+//                     rotateY(${isLeft ? -60 : 60}deg) /* Angle towards field */
+//                     skewX(${isLeft ? -15 : 15}deg) /* Perspective distortion */
+//                     translateY(-10%) /* Adjust vertical position */
+//                 `,
+//                 transformOrigin: isLeft ? 'bottom right' : 'bottom left', // Pivot point for rotation
+//                 width: '600px', // Fixed width for consistent size
+//                 height: '200px', // Fixed height
+//             }}
+//         >
+//             {/* Base of the stand */}
+//             <div className="absolute inset-0 bg-slate-900 border border-slate-700 shadow-xl"></div>
 
-            {Array.from({ length: numRows }).map((_, rowIndex) => (
-                <div
-                    key={rowIndex}
-                    className="absolute w-full h-[30px] flex items-center justify-evenly"
-                    style={{
-                        bottom: `${rowIndex * 20}%`, // Stacking rows
-                        transform: `translateZ(${rowIndex * 10}px) translateY(${rowIndex * -5}px)`, // Depth and height for tiers
-                        backgroundColor: `rgba(0,0,0,${0.2 + rowIndex * 0.05})`, // Darker as it goes up
-                        zIndex: numRows - rowIndex,
-                    }}
-                >
-                    {Array.from({ length: fansPerRow }).map((_, fanIndex) => {
-                        const randomFanColor = fanColors[Math.floor(Math.random() * fanColors.length)];
-                        return (
-                            <VoxelFan
-                                key={fanIndex}
-                                x={((fanIndex + 0.5) / fansPerRow) * 100}
-                                y={50} // Vertically centered in the row
-                                fanColor={randomFanColor}
-                                scale={0.25 + (rowIndex * 0.03)} // Fans in front rows slightly larger
-                            />
-                        );
-                    })}
-                </div>
-            ))}
-        </div>
-    );
-};
+//             {Array.from({ length: numRows }).map((_, rowIndex) => (
+//                 <div
+//                     key={rowIndex}
+//                     className="absolute w-full h-[30px] flex items-center justify-evenly"
+//                     style={{
+//                         bottom: `${rowIndex * 20}%`, // Stacking rows
+//                         transform: `translateZ(${rowIndex * 10}px) translateY(${rowIndex * -5}px)`, // Depth and height for tiers
+//                         backgroundColor: `rgba(0,0,0,${0.2 + rowIndex * 0.05})`, // Darker as it goes up
+//                         zIndex: numRows - rowIndex,
+//                     }}
+//                 >
+//                     {Array.from({ length: fansPerRow }).map((_, fanIndex) => {
+//                         const randomFanColor = fanColors[Math.floor(Math.random() * fanColors.length)];
+//                         return (
+//                             <VoxelFan
+//                                 key={fanIndex}
+//                                 x={((fanIndex + 0.5) / fansPerRow) * 100}
+//                                 y={50} // Vertically centered in the row
+//                                 fanColor={randomFanColor}
+//                                 scale={0.25 + (rowIndex * 0.03)} // Fans in front rows slightly larger
+//                             />
+//                         );
+//                     })}
+//                 </div>
+//             ))}
+//         </div>
+//     );
+// };
 
 
-const VoxelStadium = ({ teamPrimaryColor, opponentColor }: { teamPrimaryColor: string, opponentColor: string }) => (
-    <div className="absolute inset-0 pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
-        {/* Sky */}
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-300 to-blue-200 -z-50"></div>
+// const VoxelStadium = ({ teamPrimaryColor, opponentColor }: { teamPrimaryColor: string, opponentColor: string }) => (
+//     <div className="absolute inset-0 pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
+//         {/* Sky */}
+//         <div className="absolute inset-0 bg-gradient-to-b from-sky-300 to-blue-200 -z-50"></div>
         
-        {/* Stands (Background) */}
-        <div 
-            className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[140%] h-[400px] bg-slate-800"
-            style={{ 
-                transform: 'translateZ(-450px) rotateX(-15deg)',
-                opacity: 1
-            }}
-        >
-            {/* Crowd Noise (Dots) */}
-            <div className="w-full h-full" style={{ 
-                backgroundImage: 'radial-gradient(circle, #fbbf24 2px, transparent 3px), radial-gradient(circle, #ef4444 2px, transparent 3px), radial-gradient(circle, #fff 2px, transparent 3px)',
-                backgroundSize: '12px 12px, 15px 15px, 20px 20px',
-                backgroundPosition: '0 0, 5px 5px, 10px 10px',
-                opacity: 0.6
-            }}></div>
-        </div>
+//         {/* Stands (Background) */}
+//         <div 
+//             className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[140%] h-[400px] bg-slate-800"
+//             style={{ 
+//                 transform: 'translateZ(-450px) rotateX(-15deg)',
+//                 opacity: 1
+//             }}
+//         >
+//             {/* Crowd Noise (Dots) */}
+//             <div className="w-full h-full" style={{ 
+//                 backgroundImage: 'radial-gradient(circle, #fbbf24 2px, transparent 3px), radial-gradient(circle, #ef4444 2px, transparent 3px), radial-gradient(circle, #fff 2px, transparent 3px)',
+//                 backgroundSize: '12px 12px, 15px 15px, 20px 20px',
+//                 backgroundPosition: '0 0, 5px 5px, 10px 10px',
+//                 opacity: 0.6
+//             }}></div>
+//         </div>
 
-         <div 
-            className="absolute top-[10%] left-1/2 -translate-x-1/2 w-full text-center"
-            style={{ transform: 'translateZ(-350px)' }}
-        >
-            <h1 className="text-white font-black text-8xl opacity-10 tracking-widest uppercase">ARENA 3D</h1>
-        </div>
+//          <div 
+//             className="absolute top-[10%] left-1/2 -translate-x-1/2 w-full text-center"
+//             style={{ transform: 'translateZ(-350px)' }}
+//         >
+//             <h1 className="text-white font-black text-8xl opacity-10 tracking-widest uppercase">ARENA 3D</h1>
+//         </div>
 
-        {/* Left Side Stands */}
-        {/* <VoxelStands teamColor={teamPrimaryColor} isLeft={true} /> */}
-        {/* Right Side Stands */}
-        {/* <VoxelStands teamColor={opponentColor} isLeft={false} /> */}
-    </div>
-);
+//         {/* Left Side Stands */}
+//         {/* <VoxelStands teamColor={teamPrimaryColor} isLeft={true} /> */}
+//         {/* Right Side Stands */}
+//         {/* <VoxelStands teamColor={opponentColor} isLeft={false} /> */}
+//     </div>
+// );
 
 const VoxelPlayer = ({ 
     color, 
@@ -400,27 +401,31 @@ const Match3DView: React.FC<Match3DViewProps> = ({
     return (
         <div className="w-full h-screen bg-gradient-to-b from-sky-300 to-blue-200 flex flex-col relative overflow-hidden touch-none select-none">
             
-            {/* HUD */}
-            <div className="absolute top-16 left-0 w-full z-50 px-4 flex justify-between items-start pointer-events-none">
-                 <button 
-                    onClick={onBack}
-                    className="pointer-events-auto bg-white/10 text-white p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-colors"
-                 >
-                    <ArrowLeft size={24} />
-                 </button>
+            {/* HUD - Voltar Button */}
+            <button 
+                onClick={onBack}
+                className="absolute top-4 left-4 z-50 pointer-events-auto bg-white/10 text-white p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-colors"
+            >
+                <ArrowLeft size={24} />
+            </button>
 
+            {/* HUD - User Team Score & Chutes */}
+            <div className="absolute top-16 left-4 z-50 pointer-events-none">
                  <div className="bg-slate-900/80 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/10 flex flex-col items-center">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Placar</div>
-                    <div className="text-3xl font-mono font-bold flex gap-4">
-                        <span className="text-emerald-400">{score.user}</span>
-                        <span className="text-slate-600">:</span>
-                        <span className="text-red-400">{score.cpu}</span>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Chutes {round}/{TOTAL_ROUNDS}</div>
+                    <div className="text-3xl font-mono font-bold">
+                        <span style={{ color: team.primaryColor }}>{score.user}</span>
                     </div>
                 </div>
+            </div>
 
-                <div className="bg-slate-900/80 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/10">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase text-right">Chutes</div>
-                    <div className="text-xl font-bold">{round} / {TOTAL_ROUNDS}</div>
+            {/* HUD - Opponent Team Score & Chutes */}
+            <div className="absolute top-16 right-4 z-50 pointer-events-none">
+                <div className="bg-slate-900/80 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/10 flex flex-col items-center">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Chutes {round}/{TOTAL_ROUNDS}</div>
+                    <div className="text-3xl font-mono font-bold">
+                        <span style={{ color: opponentColor }}>{score.cpu}</span>
+                    </div>
                 </div>
             </div>
 
