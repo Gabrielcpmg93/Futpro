@@ -39,6 +39,9 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
     const [ticketsIssued, setTicketsIssued] = useState(0);
     const [arrestedCount, setArrestedCount] = useState(0);
     const [shiftTime, setShiftTime] = useState("");
+    
+    // New State for Traffic Phases (Cars vs Peds)
+    const [trafficPhase, setTrafficPhase] = useState<'CARS' | 'PEDS'>('CARS');
 
     // --- REAL TIME CLOCK ---
     useEffect(() => {
@@ -54,11 +57,21 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
         return () => clearInterval(interval);
     }, []);
 
+    // --- PHASE TOGGLE LOGIC ---
+    useEffect(() => {
+        // Toggle phase every 30 seconds
+        const interval = setInterval(() => {
+            setTrafficPhase(prev => prev === 'CARS' ? 'PEDS' : 'CARS');
+            setActionLog(prev => [`Mudança de Fluxo: ${trafficPhase === 'CARS' ? 'PEDESTRES' : 'VEÍCULOS'}`, ...prev].slice(0, 6));
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [trafficPhase]);
+
     // --- GENERATION LOGIC (CARS & PEDESTRIANS) ---
     useEffect(() => {
         const interval = setInterval(() => {
-            // Generate Cars
-            if (cars.length < 3 && !selectedCar) {
+            // Generate Cars (Only if in CARS phase)
+            if (trafficPhase === 'CARS' && cars.length < 3 && !selectedCar) {
                 const newCar: TrafficCar = {
                     id: Date.now(),
                     type: ['sedan', 'taxi', 'truck', 'sports'][Math.floor(Math.random() * 4)] as any,
@@ -75,8 +88,8 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 setCars(prev => [...prev, newCar]);
             }
 
-            // Generate Pedestrians
-            if (pedestrians.length < 4 && !selectedPedestrian) {
+            // Generate Pedestrians (Only if in PEDS phase)
+            if (trafficPhase === 'PEDS' && pedestrians.length < 4 && !selectedPedestrian) {
                 const dir = Math.random() > 0.5 ? 1 : -1;
                 const newPed: Pedestrian = {
                     id: Date.now() + Math.random(),
@@ -94,7 +107,7 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
         }, 2000);
 
         return () => clearInterval(interval);
-    }, [cars.length, pedestrians.length, selectedCar, selectedPedestrian]);
+    }, [cars.length, pedestrians.length, selectedCar, selectedPedestrian, trafficPhase]);
 
     // --- GAME LOOP ---
     useEffect(() => {
@@ -225,6 +238,11 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
                 <button onClick={onBack} className="absolute top-4 left-4 z-50 bg-black/50 text-white p-2 rounded hover:bg-black">
                     <ArrowLeft />
                 </button>
+
+                {/* Phase Indicator */}
+                <div className="absolute top-4 right-4 z-40 bg-black/60 text-white text-[10px] px-2 py-1 rounded border border-white/20 font-bold uppercase animate-pulse">
+                    FLUXO: {trafficPhase === 'CARS' ? 'VEÍCULOS' : 'PEDESTRES'}
+                </div>
 
                 <div className="absolute bottom-[80px] left-0 w-[200%] flex items-end overflow-x-hidden opacity-80">
                     {Array.from({ length: 8 }).map((_, i) => renderBuilding(i, i))}
