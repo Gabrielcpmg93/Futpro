@@ -363,7 +363,8 @@ const Match3DView: React.FC<Match3DViewProps> = ({
             >
                 {/* FIELD CONTAINER */}
                 <div 
-                    className="relative w-[400px] h-[600px] transform-style-3d transition-transform duration-700"
+                    // Adjusted for responsiveness: uses vmin (viewport minimum) and max-w/max-h
+                    className="relative w-[70vmin] h-[105vmin] mx-auto max-w-xl max-h-2xl transform-style-3d transition-transform duration-700"
                     style={{ 
                         transform: 'rotateX(40deg) translateY(-20px)',
                     }}

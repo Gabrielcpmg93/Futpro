@@ -35,7 +35,7 @@ const MarketView: React.FC<MarketViewProps> = ({ team, onUpdateTeam, onBack }) =
 
   const handleRefreshPlayers = () => {
       setPlayers(generateMarketPlayers());
-      alert("Lista de jogadores atualizada!");
+      // No alert here, feedback will be visual by new players.
   };
 
   return (
