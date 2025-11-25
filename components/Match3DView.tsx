@@ -424,7 +424,7 @@ const Match3DView: React.FC<Match3DViewProps> = ({
                 </div>
             </div>
 
-            <div className="absolute top-24 w-full text-center z-40 pointer-events-none">
+            <div className="absolute top-[70%] w-full text-center z-40 pointer-events-none">
                 <span className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg ${turn === 'PLAYER' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                     {turn === 'PLAYER' ? 'Sua Vez' : 'Vez do Adversário'}
                 </span>
