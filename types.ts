@@ -95,6 +95,14 @@ export interface Challenge {
   colorClass: string;
 }
 
+// Interface for Bankruptcy Challenge specific state
+export interface BankruptcyChallengeState {
+  matchesPlayed: number;
+  sponsorshipEarnings: number;
+  maxMatches: number; // e.g., 10
+  matchWinCount: number; // To track the 2 wins, 1 loss pattern
+}
+
 export enum ScreenState {
   SELECT_TEAM = 'SELECT_TEAM',
   HOME = 'HOME',
@@ -119,4 +127,5 @@ export enum ScreenState {
   UPDATES = 'UPDATES', // Novo estado para a tela de atualizações
   CHALLENGE_MODE = 'CHALLENGE_MODE', // Novo estado para o modo desafio
   BANKRUPTCY_CHALLENGE_SETUP = 'BANKRUPTCY_CHALLENGE_SETUP', // Novo estado para setup do desafio de falência
+  BANKRUPTCY_CHALLENGE_HUB = 'BANKRUPTCY_CHALLENGE_HUB', // Novo estado para o hub do desafio de falência
 }

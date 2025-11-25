@@ -247,6 +247,48 @@ export const generateFictionalTeam = async (teamNameInput: string): Promise<Team
   }
 };
 
+// New function to generate weak fictional teams for challenges
+export const generateWeakFictionalTeam = async (baseName: string, avgRating: number, salaryMultiplier: number, contractWeeks: number): Promise<Team> => {
+  const fictionalTeamName = `${getRandomName().split(' ')[0]} FC`; // Simplified fictional name
+  const primaryColor = `#${Math.floor(Math.random()*16777215).toString(16)}`; // Random color
+  const secondaryColor = `#${Math.floor(Math.random()*16777215).toString(16)}`; // Random color
+
+  // Generate 24 players with specified average rating
+  const roster: Player[] = Array.from({ length: 24 }).map((_, i) => ({
+      id: generateId(),
+      name: getRandomName(),
+      position: i === 0 ? Position.GK : i < 8 ? Position.DEF : i < 16 ? Position.MID : Position.FWD, // Ensure varied positions
+      rating: Math.max(1, Math.min(99, Math.floor(avgRating + (Math.random() - 0.5) * 10))), // Vary ratings slightly
+      age: 18 + Math.floor(Math.random() * 15),
+      salary: Math.floor(10000 * salaryMultiplier + Math.random() * 5000), // Base salary + multiplier
+      contractWeeks: Math.max(10, contractWeeks),
+      marketValue: parseFloat((Math.random() * (avgRating / 100 * 3)).toFixed(1)) // Low market value
+  }));
+
+  // Ensure at least one GK
+  if (!roster.some(p => p.position === Position.GK)) {
+      const gkIndex = Math.floor(Math.random() * roster.length);
+      roster[gkIndex].position = Position.GK;
+      roster[gkIndex].name = "Goleiro " + roster[gkIndex].name.split(' ')[1];
+      roster[gkIndex].rating = Math.max(60, roster[gkIndex].rating); // Ensure GK is not too bad
+  }
+
+  const teamStrength = Math.floor(roster.reduce((acc, p) => acc + p.rating, 0) / roster.length);
+
+  return {
+      id: generateId(),
+      originalName: baseName, // Could be generic for fictional teams
+      name: fictionalTeamName,
+      primaryColor: primaryColor,
+      secondaryColor: secondaryColor,
+      roster: roster,
+      youthAcademy: [], // Simplified for challenge teams
+      strength: teamStrength,
+      budget: 1000000, // Very low initial budget as per challenge
+      trophies: []
+  };
+};
+
 export const generateSocialPosts = (teamName: string): SocialPost[] => {
   return [
     { id: '1', authorName: "Capitão Silva", content: `Grande treino hoje com o ${teamName}! Estamos prontos.`, likes: 120, comments: 45, liked: false, interactions: [] },

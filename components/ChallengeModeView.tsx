@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowLeft, Flag, Banknote, ShieldOff, TrendingDown, TrendingUp } from 'lucide-react';
 import { Team, Position, Challenge, ScreenState } from '../types';

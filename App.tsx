@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import TeamSelector from './components/TeamSelector';
 import Layout from './components/Layout';
@@ -22,7 +23,8 @@ import FarmModeView from './components/FarmModeView';
 import UpdatesView from './components/UpdatesView'; // Import New Updates View
 import ChallengeModeView from './components/ChallengeModeView'; // Import New Challenge Mode View
 import BankruptcyChallengeSetupView from './components/BankruptcyChallengeSetupView'; // Import new Bankruptcy Setup View
-import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress, Challenge } from './types';
+import BankruptcyChallengeHubView from './components/BankruptcyChallengeHubView'; // Import new Bankruptcy Hub View
+import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress, Challenge, BankruptcyChallengeState } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
 const LOCAL_STORAGE_KEY = 'futmanager_pro_save';
@@ -80,6 +82,7 @@ const App: React.FC = () => {
 
   // Challenge Mode State
   const [selectedChallengeForSetup, setSelectedChallengeForSetup] = useState<Challenge | null>(null);
+  const [bankruptcyChallengeState, setBankruptcyChallengeState] = useState<BankruptcyChallengeState | null>(savedState ? savedState.bankruptcyChallengeState : null);
 
 
   // --- Auto-save effect ---
@@ -94,13 +97,14 @@ const App: React.FC = () => {
       copaProgress,
       lastMatchData,
       latestNews,
+      bankruptcyChallengeState, // Add challenge state to save
     };
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
     } catch (error) {
       console.error("Error saving state to localStorage:", error);
     }
-  }, [userTeam, currentScreen, leagueTable, currentRound, isPlayingLeagueMatch, leagueOpponent, copaProgress, lastMatchData, latestNews]);
+  }, [userTeam, currentScreen, leagueTable, currentRound, isPlayingLeagueMatch, leagueOpponent, copaProgress, lastMatchData, latestNews, bankruptcyChallengeState]);
 
 
   const handleTeamSelect = (team: Team) => {
@@ -108,6 +112,8 @@ const App: React.FC = () => {
     // Initialize league when team is created
     setLeagueTable(generateLeagueTable(team));
     setCurrentScreen(ScreenState.HOME);
+    // Clear any active challenge state
+    setBankruptcyChallengeState(null);
   };
 
   const handleUpdateTeam = (team: Team) => {
@@ -183,6 +189,7 @@ const App: React.FC = () => {
           imageCaption: "Jogadores em aquecimento antes da primeira partida do desafio."
       });
       setSelectedChallengeForSetup(null); // Clear selected challenge after starting
+      setBankruptcyChallengeState(null); // Clear any active bankruptcy challenge
       setCurrentScreen(ScreenState.HOME);
   };
 
@@ -191,13 +198,43 @@ const App: React.FC = () => {
       setCurrentScreen(ScreenState.BANKRUPTCY_CHALLENGE_SETUP);
   };
 
+  // Handler for when a team is chosen specifically for the bankruptcy challenge
+  const handleSelectTeamForBankruptcyChallenge = (team: Team) => {
+    // Reset any existing game state to start fresh with the challenge team
+    setUserTeam(team);
+    setLeagueTable(generateLeagueTable(team)); // Initialize league for challenge team
+    setCurrentRound(1);
+    setIsPlayingLeagueMatch(false);
+    setLeagueOpponent("");
+    setCopaProgress({ currentGroup: 'A', matchIndex: 0, matchesPlayedTotal: 0 }); // Reset Copa
+    setLastMatchData(null);
+    setLatestNews({ // Generic start news for challenge
+        headline: `${team.name} Aceita o Desafio da Falência!`,
+        subheadline: "O futuro do clube está nas mãos de um novo gestor.",
+        content: "Com dívidas e salários astronômicos, o novo gestor terá uma tarefa hercúlea para salvar o time da falência. A torcida, apesar da crise, sonha com a recuperação.",
+        date: new Date().toLocaleDateString('pt-BR'),
+        imageCaption: "Jogadores em aquecimento antes da primeira partida do desafio."
+    });
+
+    // Initialize bankruptcy challenge specific state
+    setBankruptcyChallengeState({
+        matchesPlayed: 0,
+        sponsorshipEarnings: 0,
+        maxMatches: 10,
+        matchWinCount: 0, // To track the 2 wins, 1 loss pattern
+    });
+    setSelectedChallengeForSetup(null); // Clear setup reference
+    setCurrentScreen(ScreenState.BANKRUPTCY_CHALLENGE_HUB); // Navigate to the hub
+  };
+
+
   // --- RENDER ---
 
   if (currentScreen === ScreenState.SELECT_TEAM) {
     return <TeamSelector onTeamSelected={handleTeamSelect} />;
   }
 
-  if (!userTeam && currentScreen !== ScreenState.BANKRUPTCY_CHALLENGE_SETUP) return null; // Keep this line to handle null userTeam for other screens
+  if (!userTeam && currentScreen !== ScreenState.BANKRUPTCY_CHALLENGE_SETUP && currentScreen !== ScreenState.BANKRUPTCY_CHALLENGE_HUB) return null; // Keep this line to handle null userTeam for other screens
 
   return (
     <Layout currentScreen={currentScreen} onNavigate={setCurrentScreen}>
@@ -343,9 +380,19 @@ const App: React.FC = () => {
       {currentScreen === ScreenState.BANKRUPTCY_CHALLENGE_SETUP && selectedChallengeForSetup && (
           <BankruptcyChallengeSetupView
             challenge={selectedChallengeForSetup}
-            onStart={handleChallengeStart} // Use the same start function
+            onSelectTeamAndStart={handleSelectTeamForBankruptcyChallenge} // Use new handler
             onBack={() => setCurrentScreen(ScreenState.CHALLENGE_MODE)}
           />
+      )}
+
+      {currentScreen === ScreenState.BANKRUPTCY_CHALLENGE_HUB && bankruptcyChallengeState && userTeam && (
+        <BankruptcyChallengeHubView
+            challengeState={bankruptcyChallengeState}
+            onUpdateChallengeState={setBankruptcyChallengeState}
+            onNavigate={setCurrentScreen}
+            userTeam={userTeam} // Pass the actual userTeam
+            onUpdateUserTeam={handleUpdateTeam} // Pass handler to update main userTeam
+        />
       )}
     </Layout>
   );
