@@ -57,14 +57,28 @@ const PoliceModeView: React.FC<PoliceModeViewProps> = ({ onBack }) => {
         return () => clearInterval(interval);
     }, []);
 
-    // --- PHASE TOGGLE LOGIC ---
+    // --- PHASE TOGGLE TIMER ---
     useEffect(() => {
-        // Toggle phase every 30 seconds
         const interval = setInterval(() => {
             setTrafficPhase(prev => prev === 'CARS' ? 'PEDS' : 'CARS');
-            setActionLog(prev => [`Mudança de Fluxo: ${trafficPhase === 'CARS' ? 'PEDESTRES' : 'VEÍCULOS'}`, ...prev].slice(0, 6));
-        }, 30000);
+        }, 30000); // Switch every 30 seconds
         return () => clearInterval(interval);
+    }, []);
+
+    // --- PHASE CHANGE HANDLER (CLEANUP) ---
+    // This ensures entities disappear instantly when phase changes
+    useEffect(() => {
+        if (trafficPhase === 'CARS') {
+            // Switched TO Cars -> Kill all Pedestrians
+            setPedestrians([]);
+            setSelectedPedestrian(null);
+            setActionLog(prev => [`Fluxo alterado para: VEÍCULOS`, ...prev].slice(0, 6));
+        } else {
+            // Switched TO Pedestrians -> Kill all Cars
+            setCars([]);
+            setSelectedCar(null);
+            setActionLog(prev => [`Fluxo alterado para: PEDESTRES`, ...prev].slice(0, 6));
+        }
     }, [trafficPhase]);
 
     // --- GENERATION LOGIC (CARS & PEDESTRIANS) ---
