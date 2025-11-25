@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TeamSelector from './components/TeamSelector';
 import Layout from './components/Layout';
@@ -21,7 +20,9 @@ import PressConferenceView from './components/PressConferenceView';
 import PoliceModeView from './components/PoliceModeView';
 import FarmModeView from './components/FarmModeView';
 import UpdatesView from './components/UpdatesView'; // Import New Updates View
-import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress } from './types';
+import ChallengeModeView from './components/ChallengeModeView'; // Import New Challenge Mode View
+import BankruptcyChallengeSetupView from './components/BankruptcyChallengeSetupView'; // Import new Bankruptcy Setup View
+import { Team, ScreenState, LeagueTeam, NewsArticle, CopaProgress, Challenge } from './types';
 import { generateLeagueTable, updateLeagueTable, generatePostMatchNews } from './services/geminiService';
 
 const LOCAL_STORAGE_KEY = 'futmanager_pro_save';
@@ -69,13 +70,17 @@ const App: React.FC = () => {
   } | null>(savedState ? savedState.lastMatchData : null);
 
   // News State
-  const [latestNews, setLatestNews] = useState<NewsArticle>(savedState ? savedState.latestNews : {
+  const [latestNews, setLatestNews] = useState<NewsArticle>(savedState ? savedState.latestState : {
       headline: "Temporada Começa com Grande Expectativa!",
       subheadline: "Times se reforçam para o campeonato mais disputado do ano.",
       content: "A torcida está ansiosa para ver os novos reforços em campo. O mercado da bola esteve agitado e promessas de títulos foram feitas por diversos dirigentes. Quem levantará a taça este ano?",
       date: new Date().toLocaleDateString('pt-BR'),
       imageCaption: "Estádio lotado para a abertura da temporada."
   });
+
+  // Challenge Mode State
+  const [selectedChallengeForSetup, setSelectedChallengeForSetup] = useState<Challenge | null>(null);
+
 
   // --- Auto-save effect ---
   useEffect(() => {
@@ -160,35 +165,61 @@ const App: React.FC = () => {
       setCurrentScreen(ScreenState.PLAY_HUB);
   };
 
+  // --- CHALLENGE MODE HANDLERS ---
+  const handleChallengeStart = async (challenge: Challenge) => {
+      const challengeTeam = await challenge.startTeamConfig(); // Generate team from challenge config
+      setUserTeam(challengeTeam);
+      setLeagueTable(generateLeagueTable(challengeTeam)); // Initialize league for challenge team
+      setCurrentRound(1);
+      setIsPlayingLeagueMatch(false);
+      setLeagueOpponent("");
+      setCopaProgress({ currentGroup: 'A', matchIndex: 0, matchesPlayedTotal: 0 }); // Reset Copa
+      setLastMatchData(null);
+      setLatestNews({ // Generic start news for challenge
+          headline: `${challengeTeam.name} Embarca em Nova Jornada!`,
+          subheadline: "Grandes expectativas cercam o início da temporada.",
+          content: "O time se prepara para uma temporada desafiadora, com a torcida ansiosa por bons resultados. A diretoria promete dedicação total para superar os obstáculos e alcançar a glória.",
+          date: new Date().toLocaleDateString('pt-BR'),
+          imageCaption: "Jogadores em aquecimento antes da primeira partida do desafio."
+      });
+      setSelectedChallengeForSetup(null); // Clear selected challenge after starting
+      setCurrentScreen(ScreenState.HOME);
+  };
+
+  const handleSetupBankruptcyChallenge = (challenge: Challenge) => {
+      setSelectedChallengeForSetup(challenge);
+      setCurrentScreen(ScreenState.BANKRUPTCY_CHALLENGE_SETUP);
+  };
+
   // --- RENDER ---
 
   if (currentScreen === ScreenState.SELECT_TEAM) {
     return <TeamSelector onTeamSelected={handleTeamSelect} />;
   }
 
-  if (!userTeam) return null;
+  if (!userTeam && currentScreen !== ScreenState.BANKRUPTCY_CHALLENGE_SETUP) return null; // Keep this line to handle null userTeam for other screens
 
   return (
     <Layout currentScreen={currentScreen} onNavigate={setCurrentScreen}>
       {currentScreen === ScreenState.HOME && (
-        <Dashboard team={userTeam} onNavigate={setCurrentScreen} onUpdateTeam={handleUpdateTeam} />
+        <Dashboard team={userTeam!} onNavigate={setCurrentScreen} onUpdateTeam={handleUpdateTeam} />
       )}
       
       {currentScreen === ScreenState.SQUAD && (
-        <SquadView team={userTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
+        <SquadView team={userTeam!} onBack={() => setCurrentScreen(ScreenState.HOME)} onUpdateTeam={handleUpdateTeam} />
       )}
 
       {currentScreen === ScreenState.MARKET && (
-        <MarketView team={userTeam} onUpdateTeam={handleUpdateTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
+        <MarketView team={userTeam!} onUpdateTeam={handleUpdateTeam} onBack={() => setCurrentScreen(ScreenState.HOME)} />
       )}
 
       {currentScreen === ScreenState.SOCIAL && (
-        <SocialView teamName={userTeam.name} />
+        <SocialView teamName={userTeam!.name} />
       )}
 
       {currentScreen === ScreenState.PLAY_HUB && (
         <PlayHub 
-            team={userTeam} 
+            team={userTeam!} 
             onNavigate={setCurrentScreen} 
             onPlayLeagueMatch={handlePlayLeagueMatch}
             onPlay3DMatch={handleStart3DLeagueMatch}
@@ -198,7 +229,7 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.MATCH && (
           <MatchView 
-            team={userTeam} 
+            team={userTeam!} 
             opponentName={leagueOpponent}
             onFinish={handleMatchFinish}
           />
@@ -206,7 +237,7 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.MATCH_3D && (
           <Match3DView 
-            team={userTeam} 
+            team={userTeam!} 
             opponentName={leagueOpponent}
             onFinish={handleMatchFinish}
             onBack={() => setCurrentScreen(ScreenState.PLAY_HUB)}
@@ -232,14 +263,14 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.COPA_AMERICAS && (
           <CopaView 
-            team={userTeam} 
+            team={userTeam!} 
             progress={copaProgress} // Pass state
             onUpdateProgress={setCopaProgress} // Pass updater
             onBack={() => setCurrentScreen(ScreenState.HOME)} 
-            onWinTrophy={() => setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Copa das Américas"] })}
+            onWinTrophy={() => setUserTeam({ ...userTeam!, trophies: [...userTeam!.trophies, "Copa das Américas"] })}
             onMatchRecord={(opp, res, us, os) => {
                 // Optional: update news for Copa
-                generatePostMatchNews(userTeam.name, opp, us, os).then(news => setLatestNews(news));
+                generatePostMatchNews(userTeam!.name, opp, us, os).then(news => setLatestNews(news));
                 // Also set match data for press conference
                 setLastMatchData({
                     opponent: opp,
@@ -258,13 +289,13 @@ const App: React.FC = () => {
                  setCurrentScreen(ScreenState.HOME);
             }} 
             onCancel={() => setCurrentScreen(ScreenState.HOME)}
-            onWinTrophy={() => setUserTeam({ ...userTeam, trophies: [...userTeam.trophies, "Estrelato"] })}
+            onWinTrophy={() => setUserTeam({ ...userTeam!, trophies: [...userTeam!.trophies, "Estrelato"] })}
           />
       )}
 
       {currentScreen === ScreenState.YOUTH_ACADEMY && (
           <YouthAcademyView 
-            team={userTeam}
+            team={userTeam!}
             onBack={() => setCurrentScreen(ScreenState.HOME)}
             onUpdateTeam={handleUpdateTeam}
           />
@@ -283,7 +314,7 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.PRESS_CONFERENCE && (
           <PressConferenceView 
-            team={userTeam} 
+            team={userTeam!} 
             lastMatchData={lastMatchData}
             onBack={() => setCurrentScreen(ScreenState.HOME)} 
           />
@@ -299,6 +330,22 @@ const App: React.FC = () => {
 
       {currentScreen === ScreenState.UPDATES && (
           <UpdatesView onBack={() => setCurrentScreen(ScreenState.HOME)} />
+      )}
+
+      {currentScreen === ScreenState.CHALLENGE_MODE && (
+          <ChallengeModeView 
+            onBack={() => setCurrentScreen(ScreenState.HOME)} 
+            onChallengeStart={handleChallengeStart} // Modified to accept Challenge object
+            onSetupBankruptcyChallenge={handleSetupBankruptcyChallenge} // New prop
+          />
+      )}
+
+      {currentScreen === ScreenState.BANKRUPTCY_CHALLENGE_SETUP && selectedChallengeForSetup && (
+          <BankruptcyChallengeSetupView
+            challenge={selectedChallengeForSetup}
+            onStart={handleChallengeStart} // Use the same start function
+            onBack={() => setCurrentScreen(ScreenState.CHALLENGE_MODE)}
+          />
       )}
     </Layout>
   );

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic, Siren, Sprout, BellRing } from 'lucide-react';
+import { Calendar, Tv, Globe, Star, Trophy, DollarSign, FileText, Award, Medal, ArrowRight, List, Newspaper, GraduationCap, Map, Mic, Siren, Sprout, BellRing, Flag } from 'lucide-react';
 import { Team, ScreenState } from '../types';
 
 interface DashboardProps {
@@ -250,6 +250,26 @@ const Dashboard: React.FC<DashboardProps> = ({ team, onNavigate, onUpdateTeam })
             <p className="text-sm font-bold text-slate-800">Atualizações</p>
           </button>
       </div>
+
+      {/* Challenge Mode Button - NEW */}
+      <button 
+        onClick={() => onNavigate(ScreenState.CHALLENGE_MODE)}
+        className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white p-5 rounded-2xl shadow-lg shadow-orange-500/20 relative overflow-hidden group active:scale-95 transition-transform"
+      >
+         <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+         <div className="relative z-10 flex items-center justify-between">
+             <div className="flex items-center gap-4">
+                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                     <Flag size={24} fill="currentColor" className="text-red-300" />
+                 </div>
+                 <div className="text-left">
+                     <h2 className="font-bold text-lg leading-tight">Modo Desafio</h2>
+                     <p className="text-red-200 text-xs">Cenários únicos e objetivos difíceis</p>
+                 </div>
+             </div>
+             <ArrowRight size={20} className="text-red-200" />
+         </div>
+      </button>
 
       {/* Trophy Room Section */}
       {team.trophies.length > 0 ? (

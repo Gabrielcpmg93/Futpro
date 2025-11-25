@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 
 export enum Position {
   GK = 'GK',
@@ -83,6 +85,16 @@ export interface CopaProgress {
     matchesPlayedTotal: number;
 }
 
+// Interface for Challenge Mode
+export interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  startTeamConfig: () => Promise<Team>; // Function to generate a specific challenge team
+  colorClass: string;
+}
+
 export enum ScreenState {
   SELECT_TEAM = 'SELECT_TEAM',
   HOME = 'HOME',
@@ -105,4 +117,6 @@ export enum ScreenState {
   POLICE_MODE = 'POLICE_MODE',
   FARM_MODE = 'FARM_MODE',
   UPDATES = 'UPDATES', // Novo estado para a tela de atualizações
+  CHALLENGE_MODE = 'CHALLENGE_MODE', // Novo estado para o modo desafio
+  BANKRUPTCY_CHALLENGE_SETUP = 'BANKRUPTCY_CHALLENGE_SETUP', // Novo estado para setup do desafio de falência
 }
